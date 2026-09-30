@@ -732,167 +732,112 @@
     </div>
 
     <script>
-        /* 0. DROPBOX SERVERLESS CLOUD ENGINE */
-        const DROPBOX_ACCESS_TOKEN = "sl.u.AGxyzbyNiC1hi01Yvbd2R6MNZRKQluX67qXNC_dDI2v17EazOv4LLAtja7kryUjIY736WdUOjRq_79xVKjY8ysw48YPl0pN1aUQIUIqxIxUeOGYB1XtWXxCY6omsdkxqjvM3BulXNlgRBa_IS5Hm9RakLBpMehvNtod--SIcOy9-QZES14_wL490vKiLqe8zKcww1vyGHL26qVusPIjLp9XbpHHwM_oYRDoqhpxTTcIm7rgdPClxLkf8EJ98tbSRiMKU7OGjBLfIrY4cnVNNR9eseCfjkcsZbYy6juVajB5VflISwBkfbnJfJlsWMFA9aEm9g1re0sx1RECCzjCwRGTsTW2r4IBO3_y_PzTFZuVhm_8Jt5xVFK_tT9YVaZkemjLwSUdPSTV67do-sjlT_0glGK7fSjmkMXgrdMDZZQ5X8347NBfMVZNj9wkuU2bqmQV67uMtSc4JT0GTdjjAokh_T4ZpIV3xS9akmT-ZXn6FskzzYeC5rhmbW1NP97ZzsVM68YkFXcwOnsnGZMIuhGbm1D9twaeMe9vTwO7O-CZyQ-1BYvpjLcqUgWH61o1GzmOeWAMgHjzbBLS0vbLJDDzToPBZcNvO1mPcJ2TEgcYls02B887N1dBUNUNgR3RZZXn0Tm-uck0KadnRbBL25nhqPHtI82dCOJhe09gwjD68sXnhLr_bqkRxWPex-cKZAIAe_W86HpG4fxXpQ1OHxVK-S9RWHwk8-f5YdTzZWcVFnoHnXYrbzAw5KAVi-ua48wOgiZeeVMM6irV-fP6O-eItE1jU6HuMZu61zTcNaXZr3oCuKFP-MnfNe9bmY-vaO0Vg-2O-hYjV6IgTu1tec4ABj-XdWbdhpIQ8U7ci8wjHLksRoEgw0TNKz0l9JycUcCQlqI_r2kCyPQIsHs9h9sV_7j4q0ICV2EbTdT5Yh8-emGwUSt9bN5nnm19GONsDkGH2nfbenIGc7acwuYo_bPNS77YY3UkgJ2rn3y0o183TpZnzs3wqYQj9_yOAgtd_PYNzcRuYrCMevtIIukV9kG_CkrxYqcuQjtHujuaO60KUG1kOl_rUT7mBjXWaGoR-M5S0v5HkJtK0CrDRZm-z5TSBeicYJpEb9l2Dhv5WVHIkxnjvoK4rkhl5eP_Q4IoQaSYgyLbkfdZj_BcLcUXQbplP7AqVxGE0k53M06XB7QAFEKoK5a35SU1JPJE43VHh73lnRW4sZKt8XWkY7ShCCPKgK8TFeMnQ6fltKAgcSIyZb4pRO1qmuSHIF6BS_EQbFp2Deleg05muL3DKdX2kIxPfG63mbrSFps6Y1Dcsy5rnGFrnJW2nYWEl5pWaBVAZHh5E5vTPh2DXB-rKiYQNFfaQOmElHKB3VCOb956jOfb3Id3oUwP8oFbsetSdfhWJbbAknL6HgtPjUMYp-1r2ubHtW6mK2n-5JvSNUvyVvZBZvlD8CwLHQQx30BCkh2CZ-yY";
-        const DROPBOX_FILE_PATH = "/glamstitch_pos_db.json";
+/* 0. DROPBOX ENGINE WITH DETAILED ERROR HANDLING */
+const DROPBOX_ACCESS_TOKEN = "PASTE_TOKEN_PANJANG_KAMU_DI_SINI";
+const DROPBOX_FILE_PATH = "/glamstitch_pos_db.json";
 
-        function setCloudStatus(status, message) {
-            const badge = document.getElementById('cloud-status-badge');
-            const modalBadge = document.getElementById('modal-cloud-badge');
-            
-            if (badge) {
-                if (status === 'syncing') {
-                    badge.className = "text-[10px] text-amber-400 flex items-center gap-1 font-medium";
-                    badge.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin text-[8px]"></i> Syncing Cloud...`;
-                } else if (status === 'success') {
-                    badge.className = "text-[10px] text-emerald-400 flex items-center gap-1 font-medium";
-                    badge.innerHTML = `<i class="fa-solid fa-circle text-[6px]"></i> Cloud Synced`;
-                } else if (status === 'offline') {
-                    badge.className = "text-[10px] text-slate-400 flex items-center gap-1 font-medium";
-                    badge.innerHTML = `<i class="fa-solid fa-wifi text-[8px]"></i> Local Cache Mode`;
-                } else if (status === 'error') {
-                    badge.className = "text-[10px] text-rose-400 flex items-center gap-1 font-medium";
-                    badge.innerHTML = `<i class="fa-solid fa-circle-exclamation text-[8px]"></i> Sync Failed`;
-                }
-            }
+function setCloudStatus(status) {
+    const badge = document.getElementById('cloud-status-badge');
+    if (badge) {
+        if (status === 'syncing') badge.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin text-[8px]"></i> Syncing...`;
+        else if (status === 'success') badge.innerHTML = `<i class="fa-solid fa-circle text-[6px]"></i> Cloud Ready`;
+        else badge.innerHTML = `<i class="fa-solid fa-wifi text-[8px]"></i> Error / Offline`;
+    }
+}
 
-            if (modalBadge) {
-                if (status === 'syncing') {
-                    modalBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800";
-                    modalBadge.innerText = "Syncing...";
-                } else if (status === 'success') {
-                    modalBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
-                    modalBadge.innerText = "Synced";
-                } else if (status === 'error') {
-                    modalBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800";
-                    modalBadge.innerText = "Error";
-                } else {
-                    modalBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700";
-                    modalBadge.innerText = "Offline";
-                }
+async function loadFromDropbox(isManual = false) {
+    if (!DROPBOX_ACCESS_TOKEN || DROPBOX_ACCESS_TOKEN.includes("PASTE_TOKEN")) {
+        if (isManual) alert("Token Dropbox belum dimasukkan ke kode!");
+        return;
+    }
+    setCloudStatus('syncing');
+
+    try {
+        const response = await fetch('https://content.dropboxapi.com/2/files/download', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${DROPBOX_ACCESS_TOKEN}`,
+                'Dropbox-API-Arg': JSON.stringify({ path: DROPBOX_FILE_PATH })
             }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.ordersHistory) {
+                localStorage.setItem('glamstitch_orders_history', JSON.stringify(data.ordersHistory));
+                if (data.customersDatabase) localStorage.setItem('glamstitch_customers', JSON.stringify(data.customersDatabase));
+                if (data.brandConfig) localStorage.setItem('glamstitch_brand_config', JSON.stringify(data.brandConfig));
+                
+                if (typeof renderHistoryList === 'function') renderHistoryList();
+                if (typeof applyBrandUI === 'function') applyBrandUI();
+                
+                setCloudStatus('success');
+                if (isManual) alert('SUKSES! Data berhasil ditarik dari Dropbox!');
+            }
+        } else if (response.status === 409) {
+            setCloudStatus('error');
+            if (isManual) alert('GAGAL 409: File "glamstitch_pos_db.json" TIDAK DITEMUKAN di folder Dropbox "Apps/Glamstitch-POS-App/". Pastikan letak filenya benar!');
+        } else if (response.status === 401) {
+            setCloudStatus('error');
+            if (isManual) alert('GAGAL 401: Token Access sudah EXPIRED / KEDALUWARSA. Klik "Generate" lagi di Dropbox Console!');
+        } else {
+            const errText = await response.text();
+            setCloudStatus('error');
+            if (isManual) alert('GAGAL (' + response.status + '): ' + errText);
         }
+    } catch (err) {
+        setCloudStatus('error');
+        if (isManual) alert('GAGAL KONEKSI: Cek koneksi internet.');
+    }
+}
 
-        async function syncToDropbox(isManual = false) {
-            if (!DROPBOX_ACCESS_TOKEN || DROPBOX_ACCESS_TOKEN.includes("PASTE_ACCESS")) {
-                setCloudStatus('offline');
-                if (isManual) alert('Access Token Dropbox belum terpasang di dalam script html!');
-                return false;
-            }
+async function syncToDropbox(isManual = false) {
+    if (!DROPBOX_ACCESS_TOKEN || DROPBOX_ACCESS_TOKEN.includes("PASTE_TOKEN")) {
+        if (isManual) alert("Token Dropbox belum dimasukkan ke kode!");
+        return;
+    }
+    setCloudStatus('syncing');
 
-            setCloudStatus('syncing');
+    const payload = {
+        app: 'Glamstitch POS Engine V5',
+        lastUpdated: new Date().toISOString(),
+        brandConfig: JSON.parse(localStorage.getItem('glamstitch_brand_config') || '{}'),
+        customersDatabase: JSON.parse(localStorage.getItem('glamstitch_customers') || '[]'),
+        ordersHistory: JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]')
+    };
 
-            const history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
-            const customers = JSON.parse(localStorage.getItem('glamstitch_customers') || '[]');
-            const brand = JSON.parse(localStorage.getItem('glamstitch_brand_config') || '{}');
+    try {
+        const response = await fetch('https://content.dropboxapi.com/2/files/upload', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${DROPBOX_ACCESS_TOKEN}`,
+                'Dropbox-API-Arg': JSON.stringify({
+                    path: DROPBOX_FILE_PATH,
+                    mode: 'overwrite',
+                    autorename: false,
+                    mute: true
+                }),
+                'Content-Type': 'application/octet-stream'
+            },
+            body: JSON.stringify(payload, null, 2)
+        });
 
-            const payload = {
-                app: 'Glamstitch POS Engine V5',
-                lastUpdated: new Date().toISOString(),
-                brandConfig: brand,
-                customersDatabase: customers,
-                ordersHistory: history
-            };
-
-            try {
-                const response = await fetch('https://content.dropboxapi.com/2/files/upload', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${DROPBOX_ACCESS_TOKEN}`,
-                        'Dropbox-API-Arg': JSON.stringify({
-                            path: DROPBOX_FILE_PATH,
-                            mode: 'overwrite',
-                            autorename: false,
-                            mute: true
-                        }),
-                        'Content-Type': 'application/octet-stream'
-                    },
-                    body: JSON.stringify(payload, null, 2)
-                });
-
-                if (response.ok) {
-                    console.log("Dropbox Sync Success!");
-                    setCloudStatus('success');
-                    if (isManual) alert('Sukses! Data lokal berhasil di-upload / dikirim ke Dropbox Cloud.');
-                    return true;
-                } else {
-                    console.error("Dropbox Sync Error:", await response.text());
-                    setCloudStatus('error');
-                    if (isManual) alert('Gagal mengunggah data ke Dropbox. Periksa token Anda!');
-                    return false;
-                }
-            } catch (err) {
-                console.error("Dropbox Network Error:", err);
-                setCloudStatus('offline');
-                if (isManual) alert('Gagal terhubung ke Dropbox. Cek koneksi internet Anda.');
-                return false;
-            }
+        if (response.ok) {
+            setCloudStatus('success');
+            if (isManual) alert('SUKSES! Data berhasil terkirim dan menimpa file di Dropbox!');
+        } else if (response.status === 401) {
+            setCloudStatus('error');
+            if (isManual) alert('GAGAL 401: Token Access EXPIRED. Klik "Generate" token baru di Dropbox Console!');
+        } else {
+            const errText = await response.text();
+            setCloudStatus('error');
+            if (isManual) alert('GAGAL UPLOAD (' + response.status + '): ' + errText);
         }
-
-        async function loadFromDropbox(isManual = false) {
-            if (!DROPBOX_ACCESS_TOKEN || DROPBOX_ACCESS_TOKEN.includes("PASTE_ACCESS")) {
-                setCloudStatus('offline');
-                if (isManual) alert('Access Token Dropbox belum terpasang di dalam script html!');
-                return false;
-            }
-
-            setCloudStatus('syncing');
-
-            try {
-                const response = await fetch('https://content.dropboxapi.com/2/files/download', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${DROPBOX_ACCESS_TOKEN}`,
-                        'Dropbox-API-Arg': JSON.stringify({
-                            path: DROPBOX_FILE_PATH
-                        })
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    if (data && data.ordersHistory) {
-                        localStorage.setItem('glamstitch_orders_history', JSON.stringify(data.ordersHistory));
-                        if (data.customersDatabase) localStorage.setItem('glamstitch_customers', JSON.stringify(data.customersDatabase));
-                        if (data.brandConfig) {
-                            localStorage.setItem('glamstitch_brand_config', JSON.stringify(data.brandConfig));
-                            brandConfig = data.brandConfig;
-                        }
-                        
-                        if (typeof renderHistoryList === 'function') renderHistoryList();
-                        if (typeof applyBrandUI === 'function') applyBrandUI();
-                        
-                        console.log("Cloud JSON Loaded Successfully!");
-                        setCloudStatus('success');
-                        if (isManual) alert('Sukses! Data transaksi & konsumen terbaru berhasil ditarik dari Dropbox.');
-                        return true;
-                    }
-                } else {
-                    console.warn("Dropbox file not found yet. Using local cache.");
-                    setCloudStatus('success');
-                    if (isManual) alert('File backup belum ditemukan di Dropbox.');
-                    return false;
-                }
-            } catch (err) {
-                console.warn("Cloud connection issue, using local cache:", err);
-                setCloudStatus('offline');
-                if (isManual) alert('Gagal menarik data dari Dropbox. Menggunakan cache lokal.');
-                return false;
-            }
-        }
-
-        function triggerManualUploadDropbox() {
-            if (confirm('Kirim seluruh data lokal saat ini ke server Dropbox? (Akan menimpa file cloud dengan data lokal saat ini)')) {
-                syncToDropbox(true);
-            }
-        }
-
-        function triggerManualDownloadDropbox() {
-            if (confirm('Tarik data terbaru dari server Dropbox? (Akan memperbarui data di browser ini dengan data cloud)')) {
-                loadFromDropbox(true);
-            }
-        }
+    } catch (err) {
+        setCloudStatus('error');
+        if (isManual) alert('GAGAL KONEKSI: Cek koneksi internet.');
+    }
+}
 
         /* 1. MASTER CATALOG PRODUCTS */
         const PRODUCTS = [
