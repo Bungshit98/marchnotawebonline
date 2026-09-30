@@ -151,7 +151,7 @@
                 </a>
                 <a href="#" onclick="openBackupModal()" class="nav-item flex items-center gap-2 md:gap-3 px-3 md:px-3.5 py-2 md:py-3 rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white font-medium text-xs md:text-sm transition-all whitespace-nowrap">
                     <i class="fa-solid fa-file-export w-4 md:w-5 text-center text-sm md:text-base"></i>
-                    <span>Backup & Restore</span>
+                    <span>Backup & Sync</span>
                 </a>
             </nav>
         </div>
@@ -636,27 +636,53 @@
         </div>
     </div>
 
-    <!-- JSON BACKUP & RESTORE MODAL -->
+    <!-- JSON BACKUP, RESTORE & DROPBOX MODAL -->
     <div id="modal-backup" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
         <div class="bg-white rounded-2xl w-full max-w-md p-5 sm:p-6 soft-shadow space-y-4">
             <div class="flex items-center justify-between">
-                <h3 class="font-bold text-slate-800 text-sm sm:text-base">Backup & Restore Data</h3>
+                <h3 class="font-bold text-slate-800 text-sm sm:text-base">Backup & Synchronize Data</h3>
                 <button onclick="closeBackupModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-xs text-slate-500 leading-relaxed">
-                Kelola data transaksi & riwayat nota dalam format JSON agar dapat digunakan antar perangkat tanpa perlu database server.
-            </p>
-
-            <div class="space-y-3 pt-2">
-                <button onclick="exportJSONBackup()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-download"></i> Backup Data / Export JSON
-                </button>
-
-                <div class="relative">
-                    <input type="file" id="import-file-input" accept=".json" onchange="importJSONBackup(event)" class="hidden">
-                    <button onclick="document.getElementById('import-file-input').click()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-upload"></i> Restore Data / Import JSON
+            
+            <!-- Cloud Dropbox Sync Section -->
+            <div class="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-3.5 space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-brands fa-dropbox text-blue-600 text-sm"></i> Dropbox Cloud Sync
+                    </span>
+                    <span id="modal-cloud-badge" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Ready</span>
+                </div>
+                <p class="text-[11px] text-blue-700 leading-relaxed">
+                    Sinkronkan data transaksi & konsumen secara manual ke server Dropbox agar tersambung antar perangkat.
+                </p>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button onclick="triggerManualUploadDropbox()" class="py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Push ke Cloud
                     </button>
+                    <button onclick="triggerManualDownloadDropbox()" class="py-2.5 bg-white border border-blue-200 hover:bg-blue-50 text-blue-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> Pull dari Cloud
+                    </button>
+                </div>
+            </div>
+
+            <!-- Manual Local Offline Backup Section -->
+            <div class="border-t border-slate-100 pt-3 space-y-2.5">
+                <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Backup & Restore File Lokal (Offline)</p>
+                <p class="text-[11px] text-slate-500 leading-relaxed">
+                    Gunakan opsi file .json lokal jika server internet down atau ingin mengamankan backup fisik di laptop.
+                </p>
+
+                <div class="space-y-2 pt-1">
+                    <button onclick="exportJSONBackup()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i> Download File JSON Lokal
+                    </button>
+
+                    <div class="relative">
+                        <input type="file" id="import-file-input" accept=".json" onchange="importJSONBackup(event)" class="hidden">
+                        <button onclick="document.getElementById('import-file-input').click()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-upload"></i> Import File JSON Lokal
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -707,31 +733,51 @@
 
     <script>
         /* 0. DROPBOX SERVERLESS CLOUD ENGINE */
-        const DROPBOX_ACCESS_TOKEN = "sl.u.AGyDSwLD0gKgIha5y4gFQYrMETnfZcv3ZlX6SzQXvz2aecMin4eYDi2QcauHz0ia1663uWzu4QRsAsc4NcAn5VCQwPZqzzD3jRxdz7Mz7j6KfJofn6BTht8x4YHQPFiT4jbyBzL8L7JgAqFSSzI56eLw3Gik7W4rXuIJygKUNiGeja2tv_QQ88T2a_UKSUNT1zoZpgF4ogF3ikFGkK9m2gzgVFr0gN7F7-hB8x-y4LmTSG_6C2x5bBWiFAP2j4qzIYtLOG2Y0GyJWzHMI854NpTvMuHB4yQ1eVdv_N0VP9EL5fpKUpQRvPGcyaVYrJYCCzCPZlS2X1ReH75ZqEqe3DbXGizJWl2c1xxXoZVWvdrDvhdqArE6Jh_J_wX27tV_J5eyzDTxaWpSaRlAhKBVhVzaQVEwkRvmPoZC1XBzuoaSHnHOQ-7YcpcK8HA0lXMo52LOak5tPn_qiCfHJ5p5h9L5kFLMEdAObi4Bys6wr09Guqbc1SQRu8DeROssl1FbawWUzPVLRr972dhmDjagVAqA_EuEiASazbVgrVii5K7MRG8VDKB_vaeAU1XYprQdgy5WzdK1X4qCWWwNScEq4i_rADYZzKIPeQ4G7hhg8DT-6DQJT1EhsCCAx4JNVGiUq6wQl3ZLCZLQBBO0l7AeyOko0BwJwghh7CfHiy_sv1_22MTTfVYiG6wx3Pz_pRbR59_84YRcx_WgQBWcDqae2lYDMO5NZcJA2GGCkIg0z8U39MIInDrurdnpSLwi-aeg5I3JYDP5cwyTserVCVqFRibuHVQIowgJRH7kmFp_A_TmPpiblf9tE1uvK235EjF5ER0qLPhLElGB0d-BltC0vCpe5Fnmjj90YHJCIGmGSmOko4OA1339HJo_mskcRruhLzlUdWBuVGO1_GkJlr9ZvQ4C-DQt1w7vU5CAitE484lJYRIPEyO3hB7YwOI4N9mbHfs7Qh5GRFAxLimMwNV-DWw1cpqauokK5zHK8v8LyMzaI0MgDJ0ySslq9zruk2Ox1vG9DXyy1hipVF1e_o0nAwwA7plL_6pjM8xxkReGtXoQLik9Wkbup6rtv0vJhh0gnJK1lCBFF5zh6OE0O9OQ_BoWChqMq5wIKcLwu7Oxr6rshnlvVVcl-dYTBBTNeDG5GKxyS-wCgrgSKVG6P1tVnmJALVC2ENmPMEoMf8Xjs2thyzfXALVXty3fPvYgX5nQQbcifX5cCXZLtDlJKZQoW2ZFYi7qiZaFoLRvnOzq4QIKMicrI2yYe2ldPWXSz2_hjQZ6ukKW_H5OCB3FrDqisN-KBiJLzRULw6uA8v5_0FxfFhHviVomf9f8XLjkB41lAW3CR75EB_orTV_iKqCWAHgnTTzWpP6p5j96jd9-q82onFKe77cKktGM-Am1N0drePXa3s_H8oUQhWBnvPjRgRtc5G8oNJPF6Lo2r8VxpqVu0kLb6bWt4WIjA3Xabw72tJM";
+        const DROPBOX_ACCESS_TOKEN = "sl.u.AGxr03-KAwQPnrwzLmrxOjccp6SDbzxy5rcNjARgnCtdR7SLBq1EJFj0ZybnjvlMca93g3GdSZv5BIkyQoiEedn31LqD-pmP0ShFIGR125PDzxmef6gDTELscnC9jPniXKDYvP9JDtRBYoAMuf3mVdRiAmIlCxIW2CbtMX3oHAoub8d_CFA_94RhWy77I0SqCU1VQAYnTyutujJnWeImcZKd9ne4BVu8IA_6QfEP9n5nJskveA4I1bxBaugpP99dNtPaeIYeTtn8rSbpXVo01YkMkyy0YjwegjlKaI0jMUbJ1roNq6uWbP2_VUS096dA1HXGecoKf8MBeLVB2jcM64s-bQigNSeCQHqbPrz5tZW22116iU7gEPsqtan_sSSmMORK_XP6jKzrIP24MRuXQ8piR_Z-fIykVX_ArxVRbtZzo5eLSdvMw_rFGmgDXiKgpIpGPkVVpwdyaZEKqd_BCi0_FA1fJOgGd0zs3KIobCGirr14-vX2Bm95lrJO9C0XAz2mN7548pGp-hjNXGsj1y6cWwE1FZk-zQuk1tgTGLsGd5qV9ULgP-b2ge8z5K2zSgjn5EOyvKge0yCGoPPVJZdDs8dwtHKLgxSnjIckiQwLY5_Mdl-fmSeQ3nc19gkccAaSL2ctfI0yf2Rg9C6N8252jZ_oqTUR1BjZxkzE4XLKML1Muh_zksv004vhBlj6GWKmXJ4LlHBKyvj1aUNb9rpWpX4rei7WuBs_e6buZMSfEQCRPCPvZIefnHl3K6VYk3HZWoyuoMrG9G1epis2fNilB_bKVfX2siRW5uLw5ej-ZsZRN9qv9gJy4mMNhGd2bDUodoSjalkmB89AsvkIQPnaM389DnCc_iWT49tDMtIJUclwGyDpuJh666MxJRPT0exFU7561EVTo2ZoOM3_U2G_Ca7KWcH4nJPz7DLY1UXiK216Vr9jAv14rqzZLjlYjksM8K454waeMUgaAcD653c974N56PFC_B33IzMe0FFd-7h7I37xjebibS3TzWcjJKwhWQ17KPO-qILd6GgETOD2S89XmOA9fW4VOmDip_0FS2FmwZfvCtKcLIvALn42euj6tVtBU4Hqgkxu8f3lBK2ZqHdYtJ-yQvg2ALcn_cYfJTV5m7qaKYQaP5pirQUrPhl-29XL3bUxemOMwcfxNAgvcfPkKphet1m_6tAB25G8L2BBaztSPIdc9GAoQUBFqK_8eH6E2zPkY64hwDe-1Zlr2lT1fc6hPxBDNHwvF0NzJZEBGNZj4F_D3iTZbivbUFp_c1i8mnkvdu1leTYKDJxvWUkGspn-3Dv8tsWuadpoCVVoMprnVyrRVgF4B4FHpFUxZ9dnOw98Qfk0tZM5HpJYXxJ9DRI4ZunfPtPjzLco8Ev34AHFt-jr50Qf-Fok_XozlC-6jYlqxiPNuoIdxj6cL9HM7yqoB_H0Gz0YkQ9wIGAt1TRszPHLPPIv7Xq9_4M";
         const DROPBOX_FILE_PATH = "/glamstitch_pos_db.json";
 
         function setCloudStatus(status, message) {
             const badge = document.getElementById('cloud-status-badge');
-            if (!badge) return;
-            if (status === 'syncing') {
-                badge.className = "text-[10px] text-amber-400 flex items-center gap-1 font-medium";
-                badge.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin text-[8px]"></i> Syncing Cloud...`;
-            } else if (status === 'success') {
-                badge.className = "text-[10px] text-emerald-400 flex items-center gap-1 font-medium";
-                badge.innerHTML = `<i class="fa-solid fa-circle text-[6px]"></i> Cloud Synced`;
-            } else if (status === 'offline') {
-                badge.className = "text-[10px] text-slate-400 flex items-center gap-1 font-medium";
-                badge.innerHTML = `<i class="fa-solid fa-wifi text-[8px]"></i> Local Cache Mode`;
-            } else if (status === 'error') {
-                badge.className = "text-[10px] text-rose-400 flex items-center gap-1 font-medium";
-                badge.innerHTML = `<i class="fa-solid fa-circle-exclamation text-[8px]"></i> Sync Failed`;
+            const modalBadge = document.getElementById('modal-cloud-badge');
+            
+            if (badge) {
+                if (status === 'syncing') {
+                    badge.className = "text-[10px] text-amber-400 flex items-center gap-1 font-medium";
+                    badge.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin text-[8px]"></i> Syncing Cloud...`;
+                } else if (status === 'success') {
+                    badge.className = "text-[10px] text-emerald-400 flex items-center gap-1 font-medium";
+                    badge.innerHTML = `<i class="fa-solid fa-circle text-[6px]"></i> Cloud Synced`;
+                } else if (status === 'offline') {
+                    badge.className = "text-[10px] text-slate-400 flex items-center gap-1 font-medium";
+                    badge.innerHTML = `<i class="fa-solid fa-wifi text-[8px]"></i> Local Cache Mode`;
+                } else if (status === 'error') {
+                    badge.className = "text-[10px] text-rose-400 flex items-center gap-1 font-medium";
+                    badge.innerHTML = `<i class="fa-solid fa-circle-exclamation text-[8px]"></i> Sync Failed`;
+                }
+            }
+
+            if (modalBadge) {
+                if (status === 'syncing') {
+                    modalBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800";
+                    modalBadge.innerText = "Syncing...";
+                } else if (status === 'success') {
+                    modalBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
+                    modalBadge.innerText = "Synced";
+                } else if (status === 'error') {
+                    modalBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800";
+                    modalBadge.innerText = "Error";
+                } else {
+                    modalBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700";
+                    modalBadge.innerText = "Offline";
+                }
             }
         }
 
-        async function syncToDropbox() {
+        async function syncToDropbox(isManual = false) {
             if (!DROPBOX_ACCESS_TOKEN || DROPBOX_ACCESS_TOKEN.includes("PASTE_ACCESS")) {
                 setCloudStatus('offline');
-                return;
+                if (isManual) alert('Access Token Dropbox belum terpasang di dalam script html!');
+                return false;
             }
 
             setCloudStatus('syncing');
@@ -767,20 +813,27 @@
                 if (response.ok) {
                     console.log("Dropbox Sync Success!");
                     setCloudStatus('success');
+                    if (isManual) alert('Sukses! Data lokal berhasil di-upload / dikirim ke Dropbox Cloud.');
+                    return true;
                 } else {
                     console.error("Dropbox Sync Error:", await response.text());
                     setCloudStatus('error');
+                    if (isManual) alert('Gagal mengunggah data ke Dropbox. Periksa token Anda!');
+                    return false;
                 }
             } catch (err) {
                 console.error("Dropbox Network Error:", err);
                 setCloudStatus('offline');
+                if (isManual) alert('Gagal terhubung ke Dropbox. Cek koneksi internet Anda.');
+                return false;
             }
         }
 
-        async function loadFromDropbox() {
+        async function loadFromDropbox(isManual = false) {
             if (!DROPBOX_ACCESS_TOKEN || DROPBOX_ACCESS_TOKEN.includes("PASTE_ACCESS")) {
                 setCloudStatus('offline');
-                return;
+                if (isManual) alert('Access Token Dropbox belum terpasang di dalam script html!');
+                return false;
             }
 
             setCloudStatus('syncing');
@@ -812,14 +865,32 @@
                         
                         console.log("Cloud JSON Loaded Successfully!");
                         setCloudStatus('success');
+                        if (isManual) alert('Sukses! Data transaksi & konsumen terbaru berhasil ditarik dari Dropbox.');
+                        return true;
                     }
                 } else {
                     console.warn("Dropbox file not found yet. Using local cache.");
                     setCloudStatus('success');
+                    if (isManual) alert('File backup belum ditemukan di Dropbox.');
+                    return false;
                 }
             } catch (err) {
                 console.warn("Cloud connection issue, using local cache:", err);
                 setCloudStatus('offline');
+                if (isManual) alert('Gagal menarik data dari Dropbox. Menggunakan cache lokal.');
+                return false;
+            }
+        }
+
+        function triggerManualUploadDropbox() {
+            if (confirm('Kirim seluruh data lokal saat ini ke server Dropbox? (Akan menimpa file cloud dengan data lokal saat ini)')) {
+                syncToDropbox(true);
+            }
+        }
+
+        function triggerManualDownloadDropbox() {
+            if (confirm('Tarik data terbaru dari server Dropbox? (Akan memperbarui data di browser ini dengan data cloud)')) {
+                loadFromDropbox(true);
             }
         }
 
