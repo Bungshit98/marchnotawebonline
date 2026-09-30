@@ -44,10 +44,40 @@
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* DOCUMENT PREVIEW / PRINT — invoice & thermal receipt only */
+        .document-a4 {
+            width: 794px;
+            min-height: 1123px;
+            box-sizing: border-box;
+        }
+        .document-receipt {
+            width: 302px;
+            min-height: 420px;
+            box-sizing: border-box;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .invoice-rule { border-color: #e2e8f0; }
+        .invoice-muted { color: #64748b; }
+        .invoice-label { color: #94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+        .invoice-table th { color:#94a3b8; font-size:10px; text-transform:uppercase; letter-spacing:.05em; font-weight:800; }
+        .invoice-table td { font-size:11px; vertical-align:top; }
+        .invoice-note { background:#fffbeb; border:1px solid #fde68a; }
+        .receipt-divider { border-top:1px dashed #94a3b8; }
+        .receipt-divider-bottom { border-bottom:1px dashed #94a3b8; }
+
         @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; background: white !important; padding: 0 !important; margin: 0 !important; }
+            @page { size: auto; margin: 0; }
+            body * { visibility: hidden !important; }
+            #print-area, #print-area * { visibility: visible !important; }
+            #print-area {
+                position: absolute; left: 0; top: 0;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                background: white !important;
+            }
+            #print-area.document-a4 { width: 210mm !important; min-height: 297mm !important; padding: 12mm !important; }
+            #print-area.document-receipt { width: 80mm !important; min-height: 0 !important; padding: 4mm !important; }
             .no-print { display: none !important; }
         }
     </style>
@@ -543,7 +573,7 @@
             </div>
 
             <div class="flex-1 overflow-y-auto p-3 sm:p-8 bg-slate-100 flex justify-center">
-                <div id="print-area" class="bg-white text-slate-800 p-4 sm:p-8 rounded-xl soft-shadow transition-all w-full max-w-2xl min-h-[500px]"></div>
+                <div id="print-area" class="bg-white text-slate-800 transition-all"></div>
             </div>
         </div>
     </div>
@@ -1454,28 +1484,170 @@
             }
         }
 
+        function setDocumentMode(mode) {
+            documentMode = mode === 'receipt' ? 'receipt' : 'invoice';
+            const invoiceBtn = document.getElementById('btn-mode-invoice');
+            const receiptBtn = document.getElementById('btn-mode-receipt');
+            const active = 'px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition';
+            const inactive = 'px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition';
+            invoiceBtn.className = documentMode === 'invoice' ? active : inactive;
+            receiptBtn.className = documentMode === 'receipt' ? active : inactive;
+            renderDocumentPreview();
+        }
+
         function renderDocumentPreview() {
             const printArea = document.getElementById('print-area');
             if (!previewOrderStore) return;
             const o = previewOrderStore;
+            const money = (value) => `${brandConfig.currency || 'Rp'} ${formatRupiah(Number(value) || 0)}`;
+            const total = Math.max(0, (Number(o.subtotal) || 0) - (Number(o.discount) || 0));
+            const balance = Math.max(0, total - (Number(o.dpAmount) || 0));
+            const paymentStatus = o.paymentStatus || 'DP';
+            const paymentMethod = o.paymentMethodDetail || '-';
+            const noteLines = String(o.notes || '').split(/\r?\n/).filter(Boolean);
+            const barcodeValue = String(o.orderId || 'ORDER').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) || 'ORDER';
+            const qrText = JSON.stringify({ order: o.orderId, date: o.date, customer: o.customerName, total, paid: o.dpAmount || 0, balance });
 
-            printArea.className = "bg-white text-slate-800 p-6 rounded-xl w-full max-w-2xl text-xs space-y-4";
+            if (documentMode === 'receipt') {
+                printArea.className = 'document-receipt bg-white text-slate-900 p-4 text-[11px] leading-tight';
+                printArea.innerHTML = `
+                    <div class="text-center space-y-1">
+                        ${brandConfig.logoUrl ? `<img src="${brandConfig.logoUrl}" alt="Logo" class="mx-auto h-10 max-w-[150px] object-contain">` : ''}
+                        <div class="text-[16px] font-black uppercase tracking-tight">${brandConfig.name}</div>
+                        <div class="text-[9px] font-bold uppercase">${brandConfig.tagline || ''}</div>
+                        <div class="text-[9px] leading-snug invoice-muted">${brandConfig.address || ''}</div>
+                        <div class="text-[9px] invoice-muted">WA: ${brandConfig.whatsapp || '-'}${brandConfig.instagram ? ` • ${brandConfig.instagram}` : ''}</div>
+                    </div>
+                    <div class="receipt-divider my-3"></div>
+                    <div class="flex justify-between text-[10px]">
+                        <span>NO. NOTA</span><b>#${o.orderId}</b>
+                    </div>
+                    <div class="flex justify-between text-[10px]">
+                        <span>TANGGAL</span><span>${o.date}</span>
+                    </div>
+                    <div class="flex justify-between text-[10px]">
+                        <span>PEMESAN</span><span class="text-right ml-3">${o.customerName}</span>
+                    </div>
+                    <div class="flex justify-between text-[10px]">
+                        <span>WHATSAPP</span><span>${o.customerPhone || '-'}</span>
+                    </div>
+                    <div class="receipt-divider my-3"></div>
+                    <div class="space-y-2">
+                        ${o.items.map(i => `
+                            <div>
+                                <div class="flex justify-between gap-2 font-bold"><span class="flex-1">${i.name}</span><span>${money(i.subtotal)}</span></div>
+                                <div class="text-[9px] invoice-muted">${i.qty} x ${money(i.unitPrice)}</div>
+                                ${Array.isArray(i.details) && i.details.length ? `<div class="text-[9px] invoice-muted">${i.details.join(' • ')}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="receipt-divider my-3"></div>
+                    <div class="space-y-1">
+                        <div class="flex justify-between"><span>SUBTOTAL</span><span>${money(o.subtotal)}</span></div>
+                        <div class="flex justify-between"><span>DISKON</span><span>-${money(o.discount)}</span></div>
+                        <div class="flex justify-between"><span>TOTAL</span><b>${money(total)}</b></div>
+                        <div class="flex justify-between"><span>DP / PAID</span><span>${money(o.dpAmount)}</span></div>
+                        <div class="flex justify-between text-[13px] font-black pt-1"><span>SISA TAGIHAN</span><span>${money(balance)}</span></div>
+                    </div>
+                    <div class="receipt-divider my-3"></div>
+                    <div class="space-y-1 text-[9px]">
+                        <div><b>STATUS:</b> ${paymentStatus}</div>
+                        <div><b>METODE:</b> ${paymentMethod}</div>
+                    </div>
+                    <div class="receipt-divider my-3"></div>
+                    <div class="text-center">
+                        <svg id="receipt-barcode" class="mx-auto"></svg>
+                        <div id="receipt-qr" class="mx-auto mt-2 w-[82px] h-[82px] flex items-center justify-center"></div>
+                        <p class="text-[9px] mt-2 font-bold">Terima kasih atas pesanan Anda.</p>
+                    </div>
+                    ${noteLines.length ? `<div class="receipt-divider my-3"></div><div class="text-[8px] leading-snug space-y-0.5">${noteLines.map(n => `<div>${n}</div>`).join('')}</div>` : ''}
+                `;
+                if (window.JsBarcode) {
+                    JsBarcode('#receipt-barcode', barcodeValue, { format:'CODE128', width:1.5, height:42, displayValue:true, fontSize:9, margin:0 });
+                }
+                const receiptQr = document.getElementById('receipt-qr');
+                if (receiptQr && window.QRCode) new QRCode(receiptQr, { text: qrText, width:82, height:82, correctLevel: QRCode.CorrectLevel.M });
+                return;
+            }
+
+            printArea.className = 'document-a4 bg-white text-slate-800 p-8 rounded-xl soft-shadow';
             printArea.innerHTML = `
-                <div class="border-b pb-3">
-                    <h1 class="text-xl font-black">${brandConfig.name}</h1>
-                    <p class="text-slate-500">Nota: #${o.orderId} | Tanggal: ${o.date}</p>
-                    <p class="text-slate-500">Pemesan: ${o.customerName} (${o.customerPhone})</p>
-                </div>
-                <div class="space-y-2">
-                    ${o.items.map(i => `<div class="flex justify-between"><span>${i.name} (x${i.qty})</span><span class="mono font-bold">${formatRupiah(i.subtotal)}</span></div>`).join('')}
-                </div>
-                <div class="border-t pt-2 text-right space-y-1">
-                    <p>Subtotal: ${formatRupiah(o.subtotal)}</p>
-                    <p>Diskon: -${formatRupiah(o.discount)}</p>
-                    <p>DP Paid: ${formatRupiah(o.dpAmount)}</p>
-                    <p class="font-bold text-sm text-blue-600">Sisa Tagihan: ${formatRupiah(Math.max(0, (o.subtotal - o.discount) - o.dpAmount))}</p>
+                <div class="h-full flex flex-col">
+                    <div class="flex items-start justify-between pb-5 border-b invoice-rule">
+                        <div class="flex items-start gap-4">
+                            ${brandConfig.logoUrl ? `<img src="${brandConfig.logoUrl}" alt="Logo" class="w-14 h-14 object-contain">` : `<div class="w-14 h-14 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-xl">${String(brandConfig.name || 'A').charAt(0).toUpperCase()}</div>`}
+                            <div>
+                                <h1 class="text-[22px] font-black tracking-tight leading-none">${brandConfig.name}</h1>
+                                <p class="text-[11px] text-blue-600 font-extrabold uppercase tracking-wider mt-1">${brandConfig.tagline || ''}</p>
+                                <p class="text-[10px] invoice-muted leading-relaxed mt-2 max-w-[420px]">${brandConfig.address || ''}</p>
+                                <p class="text-[10px] invoice-muted">WA: ${brandConfig.whatsapp || '-'}${brandConfig.instagram ? ` | ${brandConfig.instagram}` : ''}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="inline-block bg-slate-900 text-white px-3 py-1 rounded-md text-[11px] font-black tracking-wider">INVOICE</div>
+                            <div class="mono text-[13px] font-bold mt-2">#${o.orderId}</div>
+                            <div class="text-[10px] invoice-muted mt-1">${o.date}</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mt-5">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                            <div class="invoice-label mb-1">Diterbitkan Untuk:</div>
+                            <div class="font-bold text-[13px]">${o.customerName}</div>
+                            <div class="text-[10px] invoice-muted mt-1">No. Telp: ${o.customerPhone || '-'}</div>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                            <div class="invoice-label mb-1">Info Pembayaran:</div>
+                            <div class="font-bold text-[11px] leading-relaxed">${paymentMethod}</div>
+                            <div class="text-[10px] invoice-muted mt-1">${paymentStatus === 'Lunas' ? 'Pembayaran: LUNAS' : `DP dibayar: ${money(o.dpAmount)}`}</div>
+                            <span class="inline-block mt-2 px-2 py-1 rounded bg-amber-100 text-amber-800 text-[9px] font-black">STATUS: ${paymentStatus.toUpperCase()}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <table class="w-full invoice-table border-collapse">
+                            <thead><tr class="border-b-2 border-slate-200"><th class="text-left pb-2">Deskripsi Apparel</th><th class="text-center pb-2 w-16">Qty</th><th class="text-right pb-2 w-32">Harga Unit</th><th class="text-right pb-2 w-32">Subtotal</th></tr></thead>
+                            <tbody>
+                                ${o.items.map(i => `
+                                    <tr class="border-b border-slate-100">
+                                        <td class="py-3 pr-4"><div class="font-bold text-[11px]">${i.name}</div>${Array.isArray(i.details) && i.details.length ? `<div class="text-[9px] invoice-muted mt-1">${i.details.join(' • ')}</div>` : ''}</td>
+                                        <td class="py-3 text-center mono">${i.qty}</td>
+                                        <td class="py-3 text-right mono">${money(i.unitPrice)}</td>
+                                        <td class="py-3 text-right mono font-bold">${money(i.subtotal)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="flex justify-end mt-5">
+                        <div class="w-[280px] space-y-2 text-[11px]">
+                            <div class="flex justify-between invoice-muted"><span>Subtotal</span><span class="mono">${money(o.subtotal)}</span></div>
+                            <div class="flex justify-between text-rose-500"><span>Diskon</span><span class="mono">-${money(o.discount)}</span></div>
+                            <div class="flex justify-between text-emerald-600"><span>Nominal DP Paid</span><span class="mono font-bold">${money(o.dpAmount)}</span></div>
+                            <div class="flex justify-between items-baseline border-t border-slate-200 pt-3 text-[15px] font-black"><span>Sisa Tagihan</span><span class="mono text-blue-600">${money(balance)}</span></div>
+                        </div>
+                    </div>
+
+                    ${noteLines.length ? `<div class="invoice-note rounded-xl p-3.5 mt-6"><div class="text-[10px] font-black text-amber-900 uppercase tracking-wide mb-1.5"><i class="fa-solid fa-lock mr-1"></i> Catatan Produksi & Syarat Garansi</div><div class="text-[9px] text-amber-900 leading-relaxed space-y-0.5">${noteLines.map(n => `<div>${n}</div>`).join('')}</div></div>` : ''}
+
+                    <div class="mt-auto pt-5 border-t invoice-rule flex items-end justify-between">
+                        <div>
+                            <svg id="invoice-barcode"></svg>
+                            <div class="text-[8px] invoice-muted mono mt-1">${barcodeValue}</div>
+                        </div>
+                        <div class="text-center">
+                            <div id="invoice-qr" class="w-[86px] h-[86px] flex items-center justify-center"></div>
+                            <div class="text-[8px] invoice-muted mt-1">Scan untuk detail transaksi</div>
+                        </div>
+                    </div>
                 </div>
             `;
+            if (window.JsBarcode) {
+                JsBarcode('#invoice-barcode', barcodeValue, { format:'CODE128', width:2, height:44, displayValue:false, margin:0 });
+            }
+            const invoiceQr = document.getElementById('invoice-qr');
+            if (invoiceQr && window.QRCode) new QRCode(invoiceQr, { text: qrText, width:86, height:86, correctLevel: QRCode.CorrectLevel.M });
         }
 
         function closeInvoiceModal() { document.getElementById('modal-invoice').classList.add('hidden'); }
