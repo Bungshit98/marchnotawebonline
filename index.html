@@ -163,7 +163,7 @@
                 </div>
                 <div class="overflow-hidden">
                     <p class="text-xs font-semibold text-white truncate">Admin Garment</p>
-                    <p class="text-[10px] text-emerald-400 flex items-center gap-1 font-medium"><i class="fa-solid fa-circle text-[6px]"></i> System Ready</p>
+                    <p id="cloud-status-badge" class="text-[10px] text-emerald-400 flex items-center gap-1 font-medium"><i class="fa-solid fa-circle text-[6px]"></i> Cloud Ready</p>
                 </div>
             </div>
         </div>
@@ -706,6 +706,123 @@
     </div>
 
     <script>
+        /* 0. DROPBOX SERVERLESS CLOUD ENGINE */
+        const DROPBOX_ACCESS_TOKEN = "sl.u.AGyDSwLD0gKgIha5y4gFQYrMETnfZcv3ZlX6SzQXvz2aecMin4eYDi2QcauHz0ia1663uWzu4QRsAsc4NcAn5VCQwPZqzzD3jRxdz7Mz7j6KfJofn6BTht8x4YHQPFiT4jbyBzL8L7JgAqFSSzI56eLw3Gik7W4rXuIJygKUNiGeja2tv_QQ88T2a_UKSUNT1zoZpgF4ogF3ikFGkK9m2gzgVFr0gN7F7-hB8x-y4LmTSG_6C2x5bBWiFAP2j4qzIYtLOG2Y0GyJWzHMI854NpTvMuHB4yQ1eVdv_N0VP9EL5fpKUpQRvPGcyaVYrJYCCzCPZlS2X1ReH75ZqEqe3DbXGizJWl2c1xxXoZVWvdrDvhdqArE6Jh_J_wX27tV_J5eyzDTxaWpSaRlAhKBVhVzaQVEwkRvmPoZC1XBzuoaSHnHOQ-7YcpcK8HA0lXMo52LOak5tPn_qiCfHJ5p5h9L5kFLMEdAObi4Bys6wr09Guqbc1SQRu8DeROssl1FbawWUzPVLRr972dhmDjagVAqA_EuEiASazbVgrVii5K7MRG8VDKB_vaeAU1XYprQdgy5WzdK1X4qCWWwNScEq4i_rADYZzKIPeQ4G7hhg8DT-6DQJT1EhsCCAx4JNVGiUq6wQl3ZLCZLQBBO0l7AeyOko0BwJwghh7CfHiy_sv1_22MTTfVYiG6wx3Pz_pRbR59_84YRcx_WgQBWcDqae2lYDMO5NZcJA2GGCkIg0z8U39MIInDrurdnpSLwi-aeg5I3JYDP5cwyTserVCVqFRibuHVQIowgJRH7kmFp_A_TmPpiblf9tE1uvK235EjF5ER0qLPhLElGB0d-BltC0vCpe5Fnmjj90YHJCIGmGSmOko4OA1339HJo_mskcRruhLzlUdWBuVGO1_GkJlr9ZvQ4C-DQt1w7vU5CAitE484lJYRIPEyO3hB7YwOI4N9mbHfs7Qh5GRFAxLimMwNV-DWw1cpqauokK5zHK8v8LyMzaI0MgDJ0ySslq9zruk2Ox1vG9DXyy1hipVF1e_o0nAwwA7plL_6pjM8xxkReGtXoQLik9Wkbup6rtv0vJhh0gnJK1lCBFF5zh6OE0O9OQ_BoWChqMq5wIKcLwu7Oxr6rshnlvVVcl-dYTBBTNeDG5GKxyS-wCgrgSKVG6P1tVnmJALVC2ENmPMEoMf8Xjs2thyzfXALVXty3fPvYgX5nQQbcifX5cCXZLtDlJKZQoW2ZFYi7qiZaFoLRvnOzq4QIKMicrI2yYe2ldPWXSz2_hjQZ6ukKW_H5OCB3FrDqisN-KBiJLzRULw6uA8v5_0FxfFhHviVomf9f8XLjkB41lAW3CR75EB_orTV_iKqCWAHgnTTzWpP6p5j96jd9-q82onFKe77cKktGM-Am1N0drePXa3s_H8oUQhWBnvPjRgRtc5G8oNJPF6Lo2r8VxpqVu0kLb6bWt4WIjA3Xabw72tJM";
+        const DROPBOX_FILE_PATH = "/glamstitch_pos_db.json";
+
+        function setCloudStatus(status, message) {
+            const badge = document.getElementById('cloud-status-badge');
+            if (!badge) return;
+            if (status === 'syncing') {
+                badge.className = "text-[10px] text-amber-400 flex items-center gap-1 font-medium";
+                badge.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin text-[8px]"></i> Syncing Cloud...`;
+            } else if (status === 'success') {
+                badge.className = "text-[10px] text-emerald-400 flex items-center gap-1 font-medium";
+                badge.innerHTML = `<i class="fa-solid fa-circle text-[6px]"></i> Cloud Synced`;
+            } else if (status === 'offline') {
+                badge.className = "text-[10px] text-slate-400 flex items-center gap-1 font-medium";
+                badge.innerHTML = `<i class="fa-solid fa-wifi text-[8px]"></i> Local Cache Mode`;
+            } else if (status === 'error') {
+                badge.className = "text-[10px] text-rose-400 flex items-center gap-1 font-medium";
+                badge.innerHTML = `<i class="fa-solid fa-circle-exclamation text-[8px]"></i> Sync Failed`;
+            }
+        }
+
+        async function syncToDropbox() {
+            if (!DROPBOX_ACCESS_TOKEN || DROPBOX_ACCESS_TOKEN.includes("PASTE_ACCESS")) {
+                setCloudStatus('offline');
+                return;
+            }
+
+            setCloudStatus('syncing');
+
+            const history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
+            const customers = JSON.parse(localStorage.getItem('glamstitch_customers') || '[]');
+            const brand = JSON.parse(localStorage.getItem('glamstitch_brand_config') || '{}');
+
+            const payload = {
+                app: 'Glamstitch POS Engine V5',
+                lastUpdated: new Date().toISOString(),
+                brandConfig: brand,
+                customersDatabase: customers,
+                ordersHistory: history
+            };
+
+            try {
+                const response = await fetch('https://content.dropboxapi.com/2/files/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${DROPBOX_ACCESS_TOKEN}`,
+                        'Dropbox-API-Arg': JSON.stringify({
+                            path: DROPBOX_FILE_PATH,
+                            mode: 'overwrite',
+                            autorename: false,
+                            mute: true
+                        }),
+                        'Content-Type': 'application/octet-stream'
+                    },
+                    body: JSON.stringify(payload, null, 2)
+                });
+
+                if (response.ok) {
+                    console.log("Dropbox Sync Success!");
+                    setCloudStatus('success');
+                } else {
+                    console.error("Dropbox Sync Error:", await response.text());
+                    setCloudStatus('error');
+                }
+            } catch (err) {
+                console.error("Dropbox Network Error:", err);
+                setCloudStatus('offline');
+            }
+        }
+
+        async function loadFromDropbox() {
+            if (!DROPBOX_ACCESS_TOKEN || DROPBOX_ACCESS_TOKEN.includes("PASTE_ACCESS")) {
+                setCloudStatus('offline');
+                return;
+            }
+
+            setCloudStatus('syncing');
+
+            try {
+                const response = await fetch('https://content.dropboxapi.com/2/files/download', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${DROPBOX_ACCESS_TOKEN}`,
+                        'Dropbox-API-Arg': JSON.stringify({
+                            path: DROPBOX_FILE_PATH
+                        })
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data && data.ordersHistory) {
+                        localStorage.setItem('glamstitch_orders_history', JSON.stringify(data.ordersHistory));
+                        if (data.customersDatabase) localStorage.setItem('glamstitch_customers', JSON.stringify(data.customersDatabase));
+                        if (data.brandConfig) {
+                            localStorage.setItem('glamstitch_brand_config', JSON.stringify(data.brandConfig));
+                            brandConfig = data.brandConfig;
+                        }
+                        
+                        if (typeof renderHistoryList === 'function') renderHistoryList();
+                        if (typeof applyBrandUI === 'function') applyBrandUI();
+                        
+                        console.log("Cloud JSON Loaded Successfully!");
+                        setCloudStatus('success');
+                    }
+                } else {
+                    console.warn("Dropbox file not found yet. Using local cache.");
+                    setCloudStatus('success');
+                }
+            } catch (err) {
+                console.warn("Cloud connection issue, using local cache:", err);
+                setCloudStatus('offline');
+            }
+        }
+
         /* 1. MASTER CATALOG PRODUCTS */
         const PRODUCTS = [
             { id: 1, name: 'Paket Ekonomis Polos Plan', category: 'jersey', desc: 'Sangat terjangkau untuk kebutuhan jersey dasar.', minQty: 1, options: [{ label: 'Atasan', price: 60000 }, { label: 'Setelan', price: 90000 }] },
@@ -743,7 +860,7 @@
             customNotes: '1. DP minimal 50% untuk pengerjaan nota.\n2. Garansi cacat produksi maksimal 3 hari setelah barang diterima.\n3. Pelunasan dilakukan sebelum pengiriman / pengambilan barang.'
         }));
 
-        window.onload = function() {
+        window.onload = async function() {
             applyBrandUI();
             renderCatalog('all');
             generateNewOrderId();
@@ -762,6 +879,9 @@
             document.getElementById('addon-logo').addEventListener('change', calculateModalPrice);
 
             renderHistoryList();
+
+            // Cloud Data Pull on Startup
+            await loadFromDropbox();
         };
 
         /* CLOSE CUSTOMER DROPDOWN ON OUTSIDE CLICK */
@@ -944,6 +1064,9 @@
 
             localStorage.setItem('glamstitch_brand_config', JSON.stringify(brandConfig));
             applyBrandUI();
+            
+            // Sync to Dropbox
+            syncToDropbox();
             alert('Pengaturan identitas brand & info rekening pembayaran berhasil diperbarui!');
         }
 
@@ -952,6 +1075,7 @@
                 localStorage.removeItem('glamstitch_orders_history');
                 localStorage.removeItem('glamstitch_brand_config');
                 localStorage.removeItem('glamstitch_customers');
+                syncToDropbox();
                 location.reload();
             }
         }
@@ -1330,7 +1454,7 @@
                 notes: brandConfig.customNotes
             };
 
-            // Save order to history
+            // Save order to history & Sync
             saveOrderToHistory(previewOrderStore);
 
             // Open Preview Modal
@@ -1902,6 +2026,9 @@
             history.unshift(order);
             localStorage.setItem('glamstitch_orders_history', JSON.stringify(history));
             renderHistoryList();
+            
+            // Sync to Dropbox Background
+            syncToDropbox();
         }
 
         function renderHistoryList() {
@@ -1999,6 +2126,9 @@
                 history = history.filter(h => h.orderId !== orderId);
                 localStorage.setItem('glamstitch_orders_history', JSON.stringify(history));
                 renderHistoryList();
+                
+                // Sync to Dropbox
+                syncToDropbox();
             }
         }
 
@@ -2053,6 +2183,10 @@
                         if (parsed.customersDatabase) {
                             localStorage.setItem('glamstitch_customers', JSON.stringify(parsed.customersDatabase));
                         }
+                        
+                        // Sync to Dropbox after restore
+                        syncToDropbox();
+
                         alert('Data berhasil di-restore! Riwayat nota, database konsumen, dan identitas brand telah diperbarui.');
                         closeBackupModal();
                     } else {
