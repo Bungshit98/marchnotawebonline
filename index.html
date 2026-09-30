@@ -903,15 +903,7 @@
                     const data = await response.json();
 
                     if (data && typeof data === 'object') {
-                        if (Array.isArray(data.ordersHistory)) {
-                            localStorage.setItem('glamstitch_orders_history', JSON.stringify(data.ordersHistory));
-                        }
-                        if (Array.isArray(data.customersDatabase)) {
-                            localStorage.setItem('glamstitch_customers', JSON.stringify(data.customersDatabase));
-                        }
-                        if (data.brandConfig && typeof data.brandConfig === 'object') {
-                            localStorage.setItem('glamstitch_brand_config', JSON.stringify(data.brandConfig));
-                        }
+                        mergeIncomingData(data);
 
                         renderHistoryList();
                         applyBrandUI();
@@ -1179,6 +1171,7 @@
             document.getElementById('cfg-mandiri').value = brandConfig.mandiriAccount || '';
             document.getElementById('cfg-qris').value = brandConfig.qrisDetail || '';
             document.getElementById('cfg-custom-notes').value = brandConfig.customNotes || '';
+            renderSidebarLogo(brandConfig.logoUrl);
         }
 
         function saveBrandSettings() {
@@ -1289,7 +1282,7 @@
             if (document.getElementById('add-oversize').checked) addonsSum += 25000;
             if (document.getElementById('add-dtf-pkg').checked) addonsSum += 35000;
             addonsSum += parseInt(document.getElementById('addon-upsize').value) || 0;
-            addonsSum += parseInt(document.getElementById('addon-logo').value) || 0;
+            addonsSum += effectiveLogoPrice();
 
             const unitPrice = basePrice + addonsSum;
             document.getElementById('modal-calculated-price').innerText = `${brandConfig.currency} ${formatRupiah(unitPrice)}`;
@@ -1325,9 +1318,12 @@
             }
 
             const logoEl = document.getElementById('addon-logo');
+            const logoName = logoEl.options[logoEl.selectedIndex].getAttribute('data-name');
+            if (/Tatami|TPU/.test(logoName) && qty < 12) { alert('Logo 3D Tatami / TPU minimal 12 Pcs.'); return; }
+            const logoPrice = effectiveLogoPrice();
             if (parseInt(logoEl.value) > 0) {
-                addOnsList.push(`Logo: ${logoEl.options[logoEl.selectedIndex].getAttribute('data-name')}`);
-                addonsPriceSum += parseInt(logoEl.value);
+                addOnsList.push(`Logo: ${logoName}${logoPrice === 0 ? ' (termasuk paket DTF)' : ''}`);
+                addonsPriceSum += logoPrice;
             }
 
             const unitPrice = basePrice + addonsPriceSum;
@@ -1413,7 +1409,8 @@
 
             const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
             const discount = parseInt(document.getElementById('summary-discount').value) || 0;
-            const dpAmount = parseInt(document.getElementById('summary-dp').value) || 0;
+            let dpAmount = parseInt(document.getElementById('summary-dp').value) || 0;
+            if (payStatus === 'Lunas') dpAmount = Math.max(0, subtotal - discount);
             const orderId = document.getElementById('cart-order-id').innerText.replace('ID: #', '');
 
             previewOrderStore = {
@@ -1453,25 +1450,47 @@
             syncToDropbox();
         }
 
+        function getOrderFinance(o) {
+            const total = Math.max(0, (Number(o.subtotal) || 0) - (Number(o.discount) || 0));
+            const paid = o.paymentStatus === 'Lunas' ? total : Math.min(total, Number(o.dpAmount) || 0);
+            return { total, paid, balance: Math.max(0, total - paid) };
+        }
+
         function renderHistoryList() {
             const container = document.getElementById('history-list');
-            let history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
+            const history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
+            const cur = brandConfig.currency || 'Rp';
             document.getElementById('nav-badge-count').innerText = history.length;
 
-            if (history.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs">Belum ada riwayat transaksi.</div>`;
+            let rev = 0, rem = 0;
+            history.forEach(h => { const f = getOrderFinance(h); rev += f.total; rem += f.balance; });
+            document.getElementById('stat-total-orders').innerText = history.length;
+            document.getElementById('stat-total-revenue').innerText = `${cur} ${formatRupiah(rev)}`;
+            document.getElementById('stat-total-remaining').innerText = `${cur} ${formatRupiah(rem)}`;
+
+            const q = (document.getElementById('history-search-input')?.value || '').trim().toLowerCase();
+            const st = document.getElementById('history-status-filter')?.value || 'ALL';
+            const list = history.filter(h =>
+                (st === 'ALL' || h.paymentStatus === st) &&
+                (!q || String(h.customerName || '').toLowerCase().includes(q) || String(h.orderId || '').toLowerCase().includes(q))
+            );
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs">${history.length ? 'Tidak ada data yang cocok.' : 'Belum ada riwayat transaksi.'}</div>`;
                 return;
             }
 
-            container.innerHTML = history.map(h => `
+            container.innerHTML = list.map(h => {
+                const f = getOrderFinance(h);
+                return `
                 <div class="p-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center text-xs">
                     <div>
                         <span class="font-bold mono">#${h.orderId}</span> - <span class="font-bold">${h.customerName}</span>
-                        <p class="text-[10px] text-slate-400">${h.date} • ${h.paymentStatus}</p>
+                        <p class="text-[10px] text-slate-400">${h.date} • ${h.paymentStatus} • Total ${cur} ${formatRupiah(f.total)} • Sisa ${cur} ${formatRupiah(f.balance)}</p>
                     </div>
                     <button onclick="reloadHistoryToPreview('${h.orderId}')" class="px-2.5 py-1 bg-blue-50 text-blue-600 font-bold rounded-lg">Buka</button>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         }
 
         function reloadHistoryToPreview(orderId) {
@@ -1667,6 +1686,218 @@
         }
 
         function formatRupiah(num) { return new Intl.NumberFormat('id-ID').format(num); }
+
+        /* ===== MODAL ADD-ON FIXES ===== */
+        function effectiveLogoPrice() {
+            const el = document.getElementById('addon-logo');
+            const opt = el.options[el.selectedIndex];
+            if (opt && opt.id === 'opt-logo-dtf' && document.getElementById('add-dtf-pkg').checked) return 0;
+            return parseInt(el.value) || 0;
+        }
+        function onAddonChange() {
+            calculateModalPrice();
+            const opt = document.getElementById('addon-logo');
+            const isDtf = opt.options[opt.selectedIndex].id === 'opt-logo-dtf' && document.getElementById('add-dtf-pkg').checked;
+            document.getElementById('dtf-override-badge').classList.toggle('hidden', !isDtf);
+        }
+        document.querySelectorAll('#modal-addon select, #modal-addon input[type="checkbox"]').forEach(el => el.addEventListener('change', onAddonChange));
+
+        function changeModalQty(d) {
+            const el = document.getElementById('modal-qty');
+            el.value = (parseInt(el.value) || 1) + d;
+            validateModalQty();
+        }
+        function validateModalQty() {
+            const min = selectedProductForModal ? selectedProductForModal.minQty : 1;
+            const el = document.getElementById('modal-qty');
+            let v = parseInt(el.value) || min;
+            if (v < min) v = min;
+            el.value = v;
+        }
+
+        /* ===== LOGO UPLOAD ===== */
+        function renderSidebarLogo(url) {
+            const box = document.getElementById('sidebar-logo-container');
+            if (!box) return;
+            box.style.background = url ? '#fff' : '';
+            box.innerHTML = url ? `<img src="${url}" alt="Logo" class="w-full h-full object-contain">` : '<i class="fa-solid fa-shirt"></i>';
+        }
+        function previewLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) { alert('File harus berupa gambar.'); e.target.value = ''; return; }
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const img = new Image();
+                img.onload = () => {
+                    const s = Math.min(1, 300 / Math.max(img.width, img.height));
+                    const c = document.createElement('canvas');
+                    c.width = Math.max(1, Math.round(img.width * s));
+                    c.height = Math.max(1, Math.round(img.height * s));
+                    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                    const data = c.toDataURL('image/png');
+                    document.getElementById('cfg-logo-url').value = data; // ikut tersimpan lewat saveBrandSettings()
+                    renderSidebarLogo(data);
+                };
+                img.onerror = () => alert('Gambar tidak bisa dibaca.');
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /* ===== BACKUP JSON / IMPORT / RESET ===== */
+        function mergeIncomingData(data) {
+            if (Array.isArray(data.ordersHistory)) {
+                const local = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
+                const ids = new Set(local.map(o => o.orderId));
+                const merged = [...local, ...data.ordersHistory.filter(o => !ids.has(o.orderId))]
+                    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                localStorage.setItem('glamstitch_orders_history', JSON.stringify(merged));
+            }
+            if (Array.isArray(data.customersDatabase)) {
+                const local = JSON.parse(localStorage.getItem('glamstitch_customers') || '[]');
+                const names = new Set(local.map(c => String(c.name).toLowerCase()));
+                const merged = [...local, ...data.customersDatabase.filter(c => c.name && !names.has(String(c.name).toLowerCase()))];
+                localStorage.setItem('glamstitch_customers', JSON.stringify(merged));
+            }
+            if (data.brandConfig && typeof data.brandConfig === 'object' && Object.keys(data.brandConfig).length) {
+                brandConfig = { ...brandConfig, ...data.brandConfig };
+                localStorage.setItem('glamstitch_brand_config', JSON.stringify(brandConfig));
+            }
+        }
+        function exportJSONBackup() {
+            const blob = new Blob([JSON.stringify(buildDropboxPayload(), null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `glamstitch_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }
+        function importJSONBackup(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (!data || typeof data !== 'object' || !(Array.isArray(data.ordersHistory) || data.brandConfig || Array.isArray(data.customersDatabase))) {
+                        throw new Error('Format file backup tidak dikenali.');
+                    }
+                    if (!confirm('Import akan DIGABUNG dengan data yang ada (nota dengan ID sama tidak diduplikasi). Lanjutkan?')) return;
+                    mergeIncomingData(data);
+                    renderHistoryList(); applyBrandUI(); syncToDropbox();
+                    alert('SUKSES! Data berhasil diimport.');
+                } catch (err) { alert('Gagal import: ' + err.message); }
+                finally { e.target.value = ''; }
+            };
+            reader.readAsText(file);
+        }
+        async function triggerFullWebReset() {
+            if (!confirm('Semua transaksi, pelanggan & setting akan dihapus. Lanjutkan?')) return;
+            if (!confirm('YAKIN? Tindakan ini tidak bisa dibatalkan (data di Dropbox juga ikut dikosongkan).')) return;
+            ['glamstitch_orders_history', 'glamstitch_customers', 'glamstitch_brand_config'].forEach(k => localStorage.removeItem(k));
+            await syncToDropbox(false);
+            location.reload();
+        }
+
+        /* ===== LAPORAN SALES ===== */
+        let reportPeriod = 'today';
+        const PERIOD_LABEL = { today: 'Harian (Hari Ini)', week: 'Mingguan (Minggu Ini)', month: 'Bulanan (Bulan Ini)', year: 'Tahunan (Tahun Ini)', all: 'Semua Periode' };
+
+        function parseOrderDate(o) {
+            if (o.timestamp) return new Date(o.timestamp);
+            const p = String(o.date || '').split('/');
+            return p.length === 3 ? new Date(+p[2], +p[1] - 1, +p[0]) : new Date(0);
+        }
+        function summarizeReport() {
+            const history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
+            const now = new Date();
+            const sod = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const weekStart = new Date(sod); weekStart.setDate(sod.getDate() - ((sod.getDay() + 6) % 7));
+            const orders = history.filter(o => {
+                const d = parseOrderDate(o);
+                if (reportPeriod === 'today') return d >= sod;
+                if (reportPeriod === 'week') return d >= weekStart;
+                if (reportPeriod === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                if (reportPeriod === 'year') return d.getFullYear() === now.getFullYear();
+                return true;
+            });
+            let omset = 0, paid = 0, rem = 0, pcs = 0; const prod = {};
+            orders.forEach(o => {
+                const f = getOrderFinance(o); omset += f.total; paid += f.paid; rem += f.balance;
+                (o.items || []).forEach(i => {
+                    const q = Number(i.qty) || 0; pcs += q;
+                    const p = prod[i.name] || (prod[i.name] = { qty: 0, rev: 0 });
+                    p.qty += q; p.rev += Number(i.subtotal) || 0;
+                });
+            });
+            return { orders, omset, paid, rem, pcs, products: Object.entries(prod).sort((a, b) => b[1].rev - a[1].rev) };
+        }
+        function reportHTML() {
+            const r = summarizeReport();
+            const cur = brandConfig.currency || 'Rp';
+            const m = v => `${cur} ${formatRupiah(v)}`;
+            const th = 'text-align:left;padding:6px;border-bottom:2px solid #e2e8f0;font-size:11px;color:#64748b';
+            const td = 'padding:6px;border-bottom:1px solid #f1f5f9;font-size:12px';
+            const card = (l, v, c) => `<div style="flex:1;min-width:150px;border:1px solid #e2e8f0;border-radius:12px;padding:12px;background:#fff"><div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase">${l}</div><div style="font-size:16px;font-weight:800;color:${c}">${v}</div></div>`;
+            return `
+            <div style="font-family:'Plus Jakarta Sans',Arial,sans-serif;color:#0f172a">
+                <h2 style="margin:0 0 2px">${brandConfig.name} — Laporan Sales</h2>
+                <p style="margin:0 0 12px;font-size:12px;color:#64748b">Periode: ${PERIOD_LABEL[reportPeriod]} • Dicetak ${new Date().toLocaleString('id-ID')}</p>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+                    ${card('Jumlah Nota', r.orders.length, '#0f172a')}
+                    ${card('Total Pcs', r.pcs, '#0f172a')}
+                    ${card('Omset', m(r.omset), '#059669')}
+                    ${card('Sudah Dibayar', m(r.paid), '#2563eb')}
+                    ${card('Sisa Piutang', m(r.rem), '#d97706')}
+                </div>
+                <h3 style="font-size:13px;margin:0 0 6px">Produk Terlaris</h3>
+                <table style="width:100%;border-collapse:collapse;margin-bottom:16px"><tr><th style="${th}">Produk</th><th style="${th}">Qty</th><th style="${th}">Nilai</th></tr>
+                ${r.products.map(([n, p]) => `<tr><td style="${td}">${n}</td><td style="${td}">${p.qty}</td><td style="${td}">${m(p.rev)}</td></tr>`).join('') || `<tr><td style="${td}" colspan="3">Tidak ada data.</td></tr>`}</table>
+                <h3 style="font-size:13px;margin:0 0 6px">Daftar Transaksi</h3>
+                <table style="width:100%;border-collapse:collapse"><tr><th style="${th}">Nota</th><th style="${th}">Tanggal</th><th style="${th}">Pemesan</th><th style="${th}">Status</th><th style="${th}">Total</th><th style="${th}">Dibayar</th><th style="${th}">Sisa</th></tr>
+                ${r.orders.map(o => { const f = getOrderFinance(o); return `<tr><td style="${td}">#${o.orderId}</td><td style="${td}">${o.date}</td><td style="${td}">${o.customerName}</td><td style="${td}">${o.paymentStatus}</td><td style="${td}">${m(f.total)}</td><td style="${td}">${m(f.paid)}</td><td style="${td}">${m(f.balance)}</td></tr>`; }).join('') || `<tr><td style="${td}" colspan="7">Tidak ada transaksi.</td></tr>`}</table>
+            </div>`;
+        }
+        function filterReportPeriod(p) {
+            reportPeriod = p;
+            const on = 'rep-period-btn px-2.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition whitespace-nowrap';
+            const off = 'rep-period-btn px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap';
+            ['today', 'week', 'month', 'year', 'all'].forEach(k => { document.getElementById('btn-rep-' + k).className = k === p ? on : off; });
+            document.getElementById('report-modal-content').innerHTML = reportHTML();
+        }
+        function openReportModal() {
+            document.getElementById('modal-report').classList.remove('hidden');
+            filterReportPeriod(reportPeriod);
+        }
+        function closeReportModal() { document.getElementById('modal-report').classList.add('hidden'); }
+
+        function exportReportXLSX() {
+            if (!window.XLSX) { alert('Library Excel belum termuat. Cek koneksi internet.'); return; }
+            const r = summarizeReport();
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+                ['Laporan Sales', brandConfig.name], ['Periode', PERIOD_LABEL[reportPeriod]],
+                ['Jumlah Nota', r.orders.length], ['Total Pcs', r.pcs], ['Omset', r.omset], ['Sudah Dibayar', r.paid], ['Sisa Piutang', r.rem]
+            ]), 'Ringkasan');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+                ['Nota', 'Tanggal', 'Pemesan', 'WhatsApp', 'Status', 'Metode', 'Subtotal', 'Diskon', 'Total', 'Dibayar', 'Sisa'],
+                ...r.orders.map(o => { const f = getOrderFinance(o); return [o.orderId, o.date, o.customerName, o.customerPhone, o.paymentStatus, o.paymentMethodDetail, o.subtotal, o.discount, f.total, f.paid, f.balance]; })
+            ]), 'Transaksi');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+                ['Produk', 'Qty', 'Nilai'], ...r.products.map(([n, p]) => [n, p.qty, p.rev])
+            ]), 'Produk');
+            XLSX.writeFile(wb, `laporan_sales_${reportPeriod}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        }
+        function printExecutiveReport() {
+            const f = document.createElement('iframe');
+            f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+            document.body.appendChild(f);
+            f.contentDocument.open();
+            f.contentDocument.write(`<html><head><title>Laporan Sales</title></head><body style="margin:16mm">${reportHTML()}</body></html>`);
+            f.contentDocument.close();
+            setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 1500); }, 300);
+        }
     </script>
 </body>
 </html>
