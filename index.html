@@ -394,6 +394,23 @@
                             <textarea id="cfg-custom-notes" rows="3" placeholder="1. DP minimal 50% untuk pengerjaan nota.&#10;2. Garansi komplain maksimal 3 hari setelah barang diterima.&#10;3. Pelunasan dilakukan sebelum pengiriman." class="w-full p-2.5 sm:p-3 bg-amber-50/50 border border-amber-200 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 text-xs font-medium"></textarea>
                         </div>
 
+                        <!-- Progress Workflow Settings -->
+                        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 soft-shadow space-y-3.5 sm:space-y-4">
+                            <h3 class="font-bold text-slate-800 text-xs sm:text-sm border-b border-slate-100 pb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-blue-600"></i> Nama Progress Order (Customable)
+                            </h3>
+                            <p class="text-[11px] text-slate-500">Nama tahapan di bawah bisa diganti sesuai alur produksi toko. Perubahan nama tidak menghapus progress transaksi yang sudah ada.</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div><label class="font-bold text-slate-600 block mb-1">1. Design</label><input id="cfg-progress-design" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"></div>
+                                <div><label class="font-bold text-slate-600 block mb-1">2. Pembayaran</label><input id="cfg-progress-payment" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"></div>
+                                <div><label class="font-bold text-slate-600 block mb-1">3. Proof</label><input id="cfg-progress-proof" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"></div>
+                                <div><label class="font-bold text-slate-600 block mb-1">4. Produksi</label><input id="cfg-progress-production" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"></div>
+                                <div><label class="font-bold text-slate-600 block mb-1">5. QC</label><input id="cfg-progress-qc" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"></div>
+                                <div><label class="font-bold text-slate-600 block mb-1">6. Pengiriman / Ambil</label><input id="cfg-progress-delivery" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"></div>
+                                <div class="sm:col-span-2"><label class="font-bold text-slate-600 block mb-1">7. Selesai</label><input id="cfg-progress-completed" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"></div>
+                            </div>
+                        </div>
+
                         <!-- System Reset -->
                         <div class="bg-rose-50/60 p-3.5 sm:p-4 rounded-2xl border border-rose-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-4">
                             <div>
@@ -482,14 +499,14 @@
                         <span>Diskon / Potongan</span>
                         <div class="flex items-center gap-1 w-24 sm:w-28">
                             <span class="text-xs text-slate-400 currency-label">Rp</span>
-                            <input type="number" id="summary-discount" value="0" min="0" onchange="calculateCartTotals()" class="w-full px-2 py-0.5 text-xs bg-white border border-slate-200 rounded text-right mono focus:outline-none focus:border-blue-500">
+                            <input type="text" id="summary-discount" value="0" inputmode="numeric" oninput="formatMoneyInput(this); calculateCartTotals()" onchange="formatMoneyInput(this); calculateCartTotals()" class="w-full px-2 py-0.5 text-xs bg-white border border-slate-200 rounded text-right mono focus:outline-none focus:border-blue-500">
                         </div>
                     </div>
                     <div class="flex justify-between items-center text-slate-500">
                         <span>Nominal DP Paid</span>
                         <div class="flex items-center gap-1 w-24 sm:w-28">
                             <span class="text-xs text-slate-400 currency-label">Rp</span>
-                            <input type="number" id="summary-dp" value="0" min="0" onchange="calculateCartTotals()" class="w-full px-2 py-0.5 text-xs bg-white border border-slate-200 rounded text-right mono focus:outline-none focus:border-blue-500">
+                            <input type="text" id="summary-dp" value="0" inputmode="numeric" oninput="formatMoneyInput(this); calculateCartTotals()" onchange="formatMoneyInput(this); calculateCartTotals()" class="w-full px-2 py-0.5 text-xs bg-white border border-slate-200 rounded text-right mono focus:outline-none focus:border-blue-500">
                         </div>
                     </div>
                     <div class="pt-2 border-t border-slate-200 flex justify-between items-baseline">
@@ -622,6 +639,24 @@
                         <option value="15000" data-name="Semi-Woven Logo">Semi-Woven (+15.000)</option>
                     </select>
                 </div>
+
+                <!-- Design Charge -->
+                <div id="design-charge-section" class="space-y-1.5 sm:space-y-2">
+                    <label class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 block">6. Charge Desain</label>
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-xs font-bold text-amber-900">Harga desain manual</p>
+                                <p class="text-[10px] text-amber-700">Untuk paket Satuan / Tim (minimal basis 6 pcs / 1 tim). Jika qty di bawah 6 pcs, charge desain tetap dihitung 1x.</p>
+                            </div>
+                            <div class="flex items-center gap-1 w-32 flex-shrink-0">
+                                <span class="text-xs text-slate-400 currency-label">Rp</span>
+                                <input type="text" id="design-charge-input" value="0" inputmode="numeric" oninput="formatMoneyInput(this); calculateModalPrice()" class="w-full px-2 py-1.5 text-xs bg-white border border-amber-200 rounded-lg text-right mono focus:outline-none focus:border-blue-500">
+                            </div>
+                        </div>
+                        <div id="design-charge-info" class="text-[10px] font-semibold text-amber-800">Charge desain: Rp 0</div>
+                    </div>
+                </div>
             </div>
 
             <div class="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between flex-shrink-0">
@@ -631,7 +666,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <button onclick="closeAddonModal()" class="px-3 sm:px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition">Batal</button>
-                    <button onclick="confirmAddToCart()" class="px-4 sm:px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition">Tambahkan ke Cart</button>
+                    <button id="modal-confirm-cart-btn" onclick="confirmAddToCart()" class="px-4 sm:px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/20 transition">Tambahkan ke Cart</button>
                 </div>
             </div>
         </div>
@@ -755,6 +790,21 @@
                 </button>
 
                 <div id="dropbox-sync-status" class="text-[10px] text-center text-slate-400 min-h-[15px]"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ORDER PROGRESS FLOATING MODAL -->
+    <div id="modal-progress" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-2.5 sm:p-4">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[92vh] flex flex-col soft-shadow overflow-hidden border border-slate-100">
+            <div class="px-4 sm:px-6 py-3.5 bg-slate-900 text-white flex items-center justify-between">
+                <div><h3 class="font-bold text-sm sm:text-base">Progress Order <span id="progress-modal-order" class="text-blue-300"></span></h3><p id="progress-modal-customer" class="text-[10px] sm:text-xs text-slate-300 mt-0.5"></p></div>
+                <button onclick="closeProgressModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="progress-modal-body" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3"></div>
+            <div class="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+                <button onclick="closeProgressModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-600">Batal</button>
+                <button onclick="saveOrderProgress()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold"><i class="fa-solid fa-floppy-disk mr-1"></i>Simpan Progress</button>
             </div>
         </div>
     </div>
@@ -1114,7 +1164,8 @@
             bcaAccount: '123-456-7890 a/n Glamstitch',
             mandiriAccount: '987-654-3210 a/n Glamstitch',
             qrisDetail: 'Scan QR Kasir',
-            customNotes: '1. DP minimal 50% untuk pengerjaan nota.\n2. Garansi cacat produksi maksimal 3 hari setelah barang diterima.\n3. Pelunasan dilakukan sebelum pengiriman / pengambilan barang.'
+            customNotes: '1. DP minimal 50% untuk pengerjaan nota.\n2. Garansi cacat produksi maksimal 3 hari setelah barang diterima.\n3. Pelunasan dilakukan sebelum pengiriman / pengambilan barang.',
+            progressLabels: { design:'Proses Design', payment:'Proses Pembayaran', proof:'Proof Warna & Element Desain', production:'Produksi', qc:'QC', delivery:'Pengiriman / Diambil di Toko', completed:'Selesai' }
         }));
 
         window.onload = function() {
@@ -1269,6 +1320,8 @@
             document.getElementById('cfg-mandiri').value = brandConfig.mandiriAccount || '987-654-3210 a/n Glamstitch';
             document.getElementById('cfg-qris').value = brandConfig.qrisDetail || 'Scan QR Kasir';
             document.getElementById('cfg-custom-notes').value = brandConfig.customNotes || '';
+            const pl = getProgressLabels();
+            ['design','payment','proof','production','qc','delivery','completed'].forEach(k => { const el=document.getElementById('cfg-progress-'+k); if(el) el.value=pl[k]; });
 
             // Update Payment Method Options dynamically
             const bcaOpt = document.getElementById('opt-pay-bca');
@@ -1315,6 +1368,7 @@
             brandConfig.mandiriAccount = document.getElementById('cfg-mandiri').value;
             brandConfig.qrisDetail = document.getElementById('cfg-qris').value;
             brandConfig.customNotes = document.getElementById('cfg-custom-notes').value;
+            brandConfig.progressLabels = { design:document.getElementById('cfg-progress-design').value || 'Proses Design', payment:document.getElementById('cfg-progress-payment').value || 'Proses Pembayaran', proof:document.getElementById('cfg-progress-proof').value || 'Proof Warna & Element Desain', production:document.getElementById('cfg-progress-production').value || 'Produksi', qc:document.getElementById('cfg-progress-qc').value || 'QC', delivery:document.getElementById('cfg-progress-delivery').value || 'Pengiriman / Diambil di Toko', completed:document.getElementById('cfg-progress-completed').value || 'Selesai' };
 
             localStorage.setItem('glamstitch_brand_config', JSON.stringify(brandConfig));
             applyBrandUI();
@@ -1391,22 +1445,25 @@
             renderCatalog(cat);
         }
 
-        function openAddonModal(productId) {
+        function openAddonModal(productId, editIndex = null) {
             selectedProductForModal = PRODUCTS.find(p => p.id === productId);
             if (!selectedProductForModal) return;
+            currentEditingItem = (editIndex !== null && editIndex !== undefined) ? editIndex : null;
+            const editItem = currentEditingItem !== null ? cart[currentEditingItem] : null;
 
-            document.getElementById('modal-product-title').innerText = selectedProductForModal.name;
+            document.getElementById('modal-product-title').innerText = editItem ? `Edit ${selectedProductForModal.name}` : selectedProductForModal.name;
             document.getElementById('modal-min-qty-label').innerText = `Minimal pemesanan untuk paket ini: ${selectedProductForModal.minQty} Pcs`;
+            document.getElementById('modal-confirm-cart-btn').innerText = editItem ? 'Simpan Perubahan' : 'Tambahkan ke Cart';
 
-            // Setup Options Radio Group
             const typeGroup = document.getElementById('type-radio-group');
             typeGroup.innerHTML = '';
             selectedProductForModal.options.forEach((opt, idx) => {
+                const checked = editItem ? ((editItem.config?.optionName || '') === opt.label) : idx === 0;
                 const label = document.createElement('label');
                 label.className = "flex items-center justify-between p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition text-xs";
                 label.innerHTML = `
                     <div class="flex items-center gap-2">
-                        <input type="radio" name="apparel-opt" value="${opt.price}" data-name="${opt.label}" ${idx === 0 ? 'checked' : ''} onchange="calculateModalPrice()" class="w-4 h-4 text-blue-600">
+                        <input type="radio" name="apparel-opt" value="${opt.price}" data-name="${opt.label}" ${checked ? 'checked' : ''} onchange="calculateModalPrice()" class="w-4 h-4 text-blue-600">
                         <span class="font-bold text-slate-800">${opt.label}</span>
                     </div>
                     <span class="mono font-bold text-blue-600">${brandConfig.currency} ${formatRupiah(opt.price)}</span>
@@ -1414,20 +1471,17 @@
                 typeGroup.appendChild(label);
             });
 
-            // Set minimum Qty
-            document.getElementById('modal-qty').value = selectedProductForModal.minQty;
-
-            // Reset inputs
-            document.getElementById('addon-collar').value = "0";
-            document.getElementById('add-longsleeve').checked = false;
-            document.getElementById('add-hoodie').checked = false;
-            document.getElementById('add-fabric-2').checked = false;
-            document.getElementById('add-fabric-3').checked = false;
-            document.getElementById('add-raglan').checked = false;
-            document.getElementById('add-oversize').checked = false;
-            document.getElementById('add-dtf-pkg').checked = false;
-            document.getElementById('addon-upsize').value = "0";
-            document.getElementById('addon-logo').value = "0";
+            const cfg = editItem?.config || {};
+            document.getElementById('modal-qty').value = editItem ? editItem.qty : selectedProductForModal.minQty;
+            document.getElementById('addon-collar').value = cfg.collarValue ?? "0";
+            ['add-longsleeve','add-hoodie','add-fabric-2','add-fabric-3','add-raglan','add-oversize','add-dtf-pkg'].forEach(id => {
+                document.getElementById(id).checked = !!cfg[id];
+            });
+            document.getElementById('addon-upsize').value = cfg.upsizeValue ?? "0";
+            document.getElementById('addon-logo').value = cfg.logoValue ?? "0";
+            document.getElementById('design-charge-input').value = formatRupiah(cfg.designChargePrice || 0);
+            const designSection = document.getElementById('design-charge-section');
+            if (designSection) designSection.classList.toggle('hidden', selectedProductForModal.minQty !== 1);
 
             calculateModalPrice();
             document.getElementById('modal-addon').classList.remove('hidden');
@@ -1435,6 +1489,7 @@
 
         function closeAddonModal() {
             document.getElementById('modal-addon').classList.add('hidden');
+            currentEditingItem = null;
         }
 
         function changeModalQty(delta) {
@@ -1462,13 +1517,13 @@
 
             const selectedRadio = document.querySelector('input[name="apparel-opt"]:checked');
             const basePrice = selectedRadio ? parseInt(selectedRadio.value) : selectedProductForModal.options[0].price;
+            const qty = parseInt(document.getElementById('modal-qty').value) || 1;
 
             const isDtfPackageChecked = document.getElementById('add-dtf-pkg').checked;
             const logoSelect = document.getElementById('addon-logo');
             const dtfOption = document.getElementById('opt-logo-dtf');
             const overrideBadge = document.getElementById('dtf-override-badge');
 
-            /* OVERRIDE LOGIC FOR DTF PACKAGE VS DTF LOGO */
             if (isDtfPackageChecked) {
                 dtfOption.value = "0";
                 dtfOption.innerText = "DTF Logo (INCLUDED / TERMASUK DTF PACKAGE)";
@@ -1492,7 +1547,11 @@
             addonsSum += parseInt(logoSelect.value) || 0;
 
             const unitPrice = basePrice + addonsSum;
+            const designChargePrice = selectedProductForModal.minQty === 1 ? parseMoneyInput(document.getElementById('design-charge-input').value) : 0;
+            const designCharge = selectedProductForModal.minQty === 1 && qty < 6 ? designChargePrice : 0;
             document.getElementById('modal-calculated-price').innerText = `${brandConfig.currency} ${formatRupiah(unitPrice)}`;
+            const info = document.getElementById('design-charge-info');
+            if (info) info.innerText = designCharge > 0 ? `Charge desain (basis 6 pcs / 1 tim): ${brandConfig.currency} ${formatRupiah(designCharge)}` : `Charge desain: ${brandConfig.currency} 0`;
         }
 
         function confirmAddToCart() {
@@ -1503,59 +1562,63 @@
 
             let addOnsList = [];
             let addonsPriceSum = 0;
-
-            // Collar
             const collarEl = document.getElementById('addon-collar');
-            if (parseInt(collarEl.value) > 0) {
+            const collarValue = parseInt(collarEl.value) || 0;
+            if (collarValue > 0) {
                 const optName = collarEl.options[collarEl.selectedIndex].getAttribute('data-name');
                 addOnsList.push(`${optName}`);
-                addonsPriceSum += parseInt(collarEl.value);
+                addonsPriceSum += collarValue;
             }
 
-            // Checkboxes
-            if (document.getElementById('add-longsleeve').checked) { addOnsList.push('Lngn Panjang Karet (+25rb)'); addonsPriceSum += 25000; }
-            if (document.getElementById('add-hoodie').checked) { addOnsList.push('Kupluk / Hoodie (+15rb)'); addonsPriceSum += 15000; }
-            if (document.getElementById('add-fabric-2').checked) { addOnsList.push('Bahan Lv.2 Embosh/Airwalk (+20rb)'); addonsPriceSum += 20000; }
-            if (document.getElementById('add-fabric-3').checked) { addOnsList.push('Bahan Lv.3 Milano UV (+30rb)'); addonsPriceSum += 30000; }
-            if (document.getElementById('add-raglan').checked) { addOnsList.push('Pola Raglan (+20rb)'); addonsPriceSum += 20000; }
-            if (document.getElementById('add-oversize').checked) { addOnsList.push('Pola Oversize (+25rb)'); addonsPriceSum += 25000; }
+            const checkboxConfig = {};
+            [['add-longsleeve','Lngn Panjang Karet (+25rb)',25000],['add-hoodie','Kupluk / Hoodie (+15rb)',15000],['add-fabric-2','Bahan Lv.2 Embosh/Airwalk (+20rb)',20000],['add-fabric-3','Bahan Lv.3 Milano UV (+30rb)',30000],['add-raglan','Pola Raglan (+20rb)',20000],['add-oversize','Pola Oversize (+25rb)',25000]].forEach(([id,label,price]) => {
+                const checked = document.getElementById(id).checked; checkboxConfig[id] = checked;
+                if (checked) { addOnsList.push(label); addonsPriceSum += price; }
+            });
 
             const isDtfPkg = document.getElementById('add-dtf-pkg').checked;
+            checkboxConfig['add-dtf-pkg'] = isDtfPkg;
             if (isDtfPkg) { addOnsList.push('DTF Package Complete (+35rb)'); addonsPriceSum += 35000; }
 
-            // Up size
             const upsizeEl = document.getElementById('addon-upsize');
-            if (parseInt(upsizeEl.value) > 0) {
+            const upsizeValue = parseInt(upsizeEl.value) || 0;
+            if (upsizeValue > 0) {
                 const name = upsizeEl.options[upsizeEl.selectedIndex].getAttribute('data-name');
-                addOnsList.push(`${name}`);
-                addonsPriceSum += parseInt(upsizeEl.value);
+                addOnsList.push(`${name}`); addonsPriceSum += upsizeValue;
             }
 
-            // Logo
             const logoEl = document.getElementById('addon-logo');
+            const logoValue = parseInt(logoEl.value) || 0;
             if (logoEl.value !== "0" || isDtfPkg) {
                 const logoName = logoEl.options[logoEl.selectedIndex].getAttribute('data-name');
-                if (isDtfPkg && logoEl.value === "0" && logoName === "DTF Logo") {
-                    addOnsList.push(`Logo: DTF Logo (Termasuk DTF Package)`);
-                } else if (parseInt(logoEl.value) > 0) {
-                    addOnsList.push(`Logo: ${logoName}`);
-                    addonsPriceSum += parseInt(logoEl.value);
-                }
+                if (isDtfPkg && logoEl.value === "0" && logoName === "DTF Logo") addOnsList.push(`Logo: DTF Logo (Termasuk DTF Package)`);
+                else if (logoValue > 0) { addOnsList.push(`Logo: ${logoName}`); addonsPriceSum += logoValue; }
             }
 
             const unitPrice = basePrice + addonsPriceSum;
+            const designChargePrice = selectedProductForModal.minQty === 1 ? parseMoneyInput(document.getElementById('design-charge-input').value) : 0;
+            const designCharge = selectedProductForModal.minQty === 1 && qty < 6 ? designChargePrice : 0;
+            if (designCharge > 0) addOnsList.push(`Charge Desain / Minimum 6 Pcs: ${brandConfig.currency} ${formatRupiah(designCharge)}`);
 
+            const config = {
+                optionName, collarValue, upsizeValue, logoValue,
+                designChargePrice,
+                ...checkboxConfig
+            };
             const cartItem = {
-                id: Date.now(),
+                id: currentEditingItem !== null && cart[currentEditingItem] ? cart[currentEditingItem].id : Date.now(),
                 productId: selectedProductForModal.id,
                 name: `${selectedProductForModal.name} (${optionName})`,
                 qty: qty,
                 unitPrice: unitPrice,
-                subtotal: unitPrice * qty,
-                details: addOnsList
+                designCharge: designCharge,
+                subtotal: unitPrice * qty + designCharge,
+                details: addOnsList,
+                config
             };
 
-            cart.push(cartItem);
+            if (currentEditingItem !== null && cart[currentEditingItem]) cart[currentEditingItem] = cartItem;
+            else cart.push(cartItem);
             renderCart();
             closeAddonModal();
         }
@@ -1595,9 +1658,14 @@
                             <span class="font-bold text-slate-800 block leading-tight text-xs">${item.name}</span>
                             <span class="text-[10px] sm:text-[11px] text-blue-600 font-semibold mono">${brandConfig.currency} ${formatRupiah(item.unitPrice)} / pcs</span>
                         </div>
-                        <button onclick="removeCartItem(${index})" class="text-slate-400 hover:text-rose-500 p-1">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
+                        <div class="flex items-center gap-1">
+                            <button onclick="openAddonModal(${item.productId}, ${index})" class="text-slate-400 hover:text-blue-600 p-1" title="Edit konfigurasi">
+                                <i class="fa-solid fa-pen text-xs"></i>
+                            </button>
+                            <button onclick="removeCartItem(${index})" class="text-slate-400 hover:text-rose-500 p-1" title="Hapus">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
                     </div>
                     ${detailsHtml}
                     <div class="flex items-center justify-between pt-1 border-t border-slate-200/60">
@@ -1620,7 +1688,14 @@
             if (cart[index].qty <= 0) {
                 cart.splice(index, 1);
             } else {
-                cart[index].subtotal = cart[index].unitPrice * cart[index].qty;
+                const item = cart[index];
+                const designChargePrice = item.config?.designChargePrice || 0;
+                item.designCharge = item.productId && PRODUCTS.find(p => p.id === item.productId)?.minQty === 1 && item.qty < 6 ? designChargePrice : 0;
+                item.subtotal = item.unitPrice * item.qty + item.designCharge;
+                if (item.config?.designChargePrice) {
+                    item.details = (item.details || []).filter(d => !d.startsWith('Charge Desain / Minimum 6 Pcs:'));
+                    if (item.designCharge > 0) item.details.push(`Charge Desain / Minimum 6 Pcs: ${brandConfig.currency} ${formatRupiah(item.designCharge)}`);
+                }
             }
             renderCart();
         }
@@ -1640,8 +1715,8 @@
 
         function calculateCartTotals() {
             const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
-            const discount = parseInt(document.getElementById('summary-discount').value) || 0;
-            const dp = parseInt(document.getElementById('summary-dp').value) || 0;
+            const discount = parseMoneyInput(document.getElementById('summary-discount').value);
+            const dp = parseMoneyInput(document.getElementById('summary-dp').value);
 
             const grandTotal = Math.max(0, subtotal - discount);
             const remainingBalance = Math.max(0, grandTotal - dp);
@@ -1682,8 +1757,8 @@
             }
 
             const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
-            const discount = parseInt(document.getElementById('summary-discount').value) || 0;
-            const dpAmount = parseInt(document.getElementById('summary-dp').value) || 0;
+            const discount = parseMoneyInput(document.getElementById('summary-discount').value);
+            const dpAmount = parseMoneyInput(document.getElementById('summary-dp').value);
             const orderId = document.getElementById('cart-order-id').innerText.replace('ID: #', '');
 
             previewOrderStore = {
@@ -2322,7 +2397,53 @@
             `).join('');
         }
 
+        function getProgressLabels() {
+            return {
+                design: 'Proses Design', payment: 'Proses Pembayaran', proof: 'Proof Warna & Element Desain', production: 'Produksi', qc: 'QC', delivery: 'Pengiriman / Diambil di Toko', completed: 'Selesai',
+                ...(brandConfig.progressLabels || {})
+            };
+        }
+
+        function createDefaultProgress(order) {
+            const paymentStatus = order.paymentStatus === 'Lunas' ? 'Lunas' : 'DP';
+            return {
+                design: { state: 'pending', decision: '' },
+                payment: { state: 'done', decision: paymentStatus },
+                proof: { state: 'pending', decision: '' },
+                production: { state: 'pending', decision: '' },
+                qc: { state: 'pending', decision: '' },
+                delivery: { state: 'pending', method: '', resi: '' },
+                completed: { state: 'pending', confirmed: false }
+            };
+        }
+
+        function ensureOrderProgress(order) {
+            if (!order.progress) order.progress = createDefaultProgress(order);
+            if (!order.progress.payment) order.progress.payment = createDefaultProgress(order).payment;
+            if (order.paymentStatus === 'Lunas') {
+                order.progress.payment = { state: 'done', decision: 'Lunas' };
+            } else if (!order.progress.payment.decision) {
+                order.progress.payment.decision = 'DP';
+            }
+            order.progress.payment.state = 'done';
+            return order.progress;
+        }
+
+        function getCurrentProgressKey(order) {
+            const p = ensureOrderProgress(order);
+            const keys = ['design','payment','proof','production','qc','delivery','completed'];
+            const first = keys.find(k => p[k]?.state !== 'done');
+            return first || 'completed';
+        }
+
+        function getProgressSummary(order) {
+            const labels = getProgressLabels();
+            const key = getCurrentProgressKey(order);
+            return labels[key] || key;
+        }
+
         function saveOrderToHistory(order) {
+            ensureOrderProgress(order);
             let history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
             history.unshift(order);
             localStorage.setItem('glamstitch_orders_history', JSON.stringify(history));
@@ -2388,13 +2509,18 @@
                             <p class="text-[10px] sm:text-[11px] text-slate-500">${h.items.length} Paket Apparel • Metode: ${h.paymentMethodDetail}</p>
                         </div>
 
-                        <div class="flex items-center justify-between md:justify-end gap-3 sm:gap-4 border-t md:border-t-0 pt-2.5 md:pt-0 border-slate-100">
-                            <div class="text-left md:text-right">
-                                <p class="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Total / Sisa</p>
-                                <p class="text-xs sm:text-sm font-black text-slate-900 mono">${brandConfig.currency} ${formatRupiah(grandTotal)}</p>
-                                <p class="text-[10px] sm:text-[11px] font-bold text-amber-600 mono">Sisa: ${brandConfig.currency} ${formatRupiah(remaining)}</p>
+                        <div class="border-t md:border-t-0 pt-2.5 md:pt-0 border-slate-100 w-full md:w-auto md:min-w-[330px]">
+                            <div class="flex items-center justify-between gap-3 mb-2">
+                                <div class="text-left md:text-right">
+                                    <p class="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Total / Sisa</p>
+                                    <p class="text-xs sm:text-sm font-black text-slate-900 mono">${brandConfig.currency} ${formatRupiah(grandTotal)}</p>
+                                    <p class="text-[10px] sm:text-[11px] font-bold text-amber-600 mono">Sisa: ${brandConfig.currency} ${formatRupiah(remaining)}</p>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-1.5 sm:gap-2">
+                            <button onclick="openProgressModal('${h.orderId}')" class="w-full mb-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-[11px] font-black transition flex items-center justify-between gap-2 border border-slate-200" title="Buka progress order">
+                                <span class="truncate">${getProgressSummary(h)}</span><span class="text-blue-600 text-sm">&gt;&gt;</span>
+                            </button>
+                            <div class="flex items-center justify-end gap-1.5 sm:gap-2 flex-wrap">
                                 <button onclick="reloadHistoryToPreview('${h.orderId}')" class="px-2.5 sm:px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-bold transition flex items-center gap-1">
                                     <i class="fa-solid fa-print"></i> Cetak
                                 </button>
@@ -2460,11 +2586,82 @@
             target.dpAmount = grandTotal;
             target.paidAt = Date.now();
             target.paymentMethodDetail = `${target.paymentMethodDetail || 'Pembayaran'} • Pelunasan`;
+            ensureOrderProgress(target);
+            target.progress.payment = { state: 'done', decision: 'Lunas' };
 
             history[targetIndex] = target;
             localStorage.setItem('glamstitch_orders_history', JSON.stringify(history));
 
             renderHistoryList();
+        }
+
+        let activeProgressOrderId = null;
+
+        function progressDecisionButtons(stage, current) {
+            return `<div class="flex gap-2 mt-2">
+                <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${current === 'approve' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-500'} cursor-pointer text-[10px] font-bold"><input type="checkbox" ${current === 'approve' ? 'checked' : ''} onchange="setProgressDecision('${stage}','approve')" class="accent-emerald-600"> Approve</label>
+                <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${current === 'revisi' ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-slate-200 bg-white text-slate-500'} cursor-pointer text-[10px] font-bold"><input type="checkbox" ${current === 'revisi' ? 'checked' : ''} onchange="setProgressDecision('${stage}','revisi')" class="accent-amber-600"> Revisi</label>
+            </div>`;
+        }
+
+        function openProgressModal(orderId) {
+            const history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
+            const order = history.find(h => h.orderId === orderId);
+            if (!order) return;
+            ensureOrderProgress(order);
+            activeProgressOrderId = orderId;
+            const labels = getProgressLabels();
+            document.getElementById('progress-modal-order').innerText = `#${order.orderId}`;
+            document.getElementById('progress-modal-customer').innerText = `${order.customerName} • ${order.customerPhone || '-'}`;
+            const p = order.progress;
+            const body = document.getElementById('progress-modal-body');
+            const stageCard = (key, icon, extra='') => `<div class="bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-4 shadow-sm" data-progress-stage="${key}">
+                <div class="flex items-start gap-3"><div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"><i class="fa-solid ${icon}"></i></div><div class="min-w-0 flex-1"><div class="flex items-center justify-between gap-2"><h4 class="text-xs sm:text-sm font-black text-slate-800">${labels[key]}</h4><span class="text-[9px] uppercase font-black px-2 py-0.5 rounded-full ${p[key]?.state === 'done' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${p[key]?.state === 'done' ? 'Selesai' : 'Berjalan'}</span></div>${extra}</div></div></div>`;
+            body.innerHTML = '';
+            body.insertAdjacentHTML('beforeend', stageCard('design','fa-pen-ruler',progressDecisionButtons('design',p.design?.decision || '')));
+            const payDecision = order.paymentStatus === 'Lunas' ? 'Lunas' : 'DP';
+            body.insertAdjacentHTML('beforeend', stageCard('payment','fa-money-bill-wave',`<div class="flex gap-2 mt-2"><label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${payDecision === 'DP' ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-slate-200 bg-white text-slate-500'} text-[10px] font-bold"><input type="checkbox" checked disabled class="accent-amber-600"> DP</label><label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border ${payDecision === 'Lunas' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-500'} text-[10px] font-bold"><input type="checkbox" ${payDecision === 'Lunas' ? 'checked' : ''} disabled class="accent-emerald-600"> LUNAS</label><span class="text-[10px] text-slate-400 self-center ml-auto">Ikuti Status Bayar nota</span></div>`));
+            body.insertAdjacentHTML('beforeend', stageCard('proof','fa-palette',progressDecisionButtons('proof',p.proof?.decision || '')));
+            const designCard = body.querySelector('[data-progress-stage="design"]'); if (designCard) designCard.dataset.decision = p.design?.decision || '';
+            const proofCard = body.querySelector('[data-progress-stage="proof"]'); if (proofCard) proofCard.dataset.decision = p.proof?.decision || '';
+            body.insertAdjacentHTML('beforeend', stageCard('production','fa-shirt',`<label class="flex items-center gap-2 mt-2 text-[10px] font-bold text-slate-600"><input type="checkbox" ${p.production?.state === 'done' ? 'checked' : ''} onchange="toggleProgressDone('production',this.checked)" class="w-4 h-4 accent-blue-600"> Tandai produksi selesai</label>`));
+            body.insertAdjacentHTML('beforeend', stageCard('qc','fa-magnifying-glass-check',`<label class="flex items-center gap-2 mt-2 text-[10px] font-bold text-slate-600"><input type="checkbox" ${p.qc?.state === 'done' ? 'checked' : ''} onchange="toggleProgressDone('qc',this.checked)" class="w-4 h-4 accent-blue-600"> QC selesai / lolos</label>`));
+            body.insertAdjacentHTML('beforeend', stageCard('delivery','fa-truck',`<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2"><select id="progress-delivery-method" onchange="toggleResiInput()" class="px-2.5 py-2 rounded-lg border border-slate-200 text-[10px] font-bold"><option value="">Pilih metode</option><option value="Pengiriman" ${p.delivery?.method === 'Pengiriman' ? 'selected' : ''}>Pengiriman</option><option value="Diambil di Toko" ${p.delivery?.method === 'Diambil di Toko' ? 'selected' : ''}>Diambil di Toko</option></select><input id="progress-resi" value="${p.delivery?.resi || ''}" placeholder="No. resi (jika pengiriman)" class="px-2.5 py-2 rounded-lg border border-slate-200 text-[10px] ${p.delivery?.method === 'Pengiriman' ? '' : 'hidden'}"><label class="sm:col-span-2 flex items-center gap-2 text-[10px] font-bold text-slate-600"><input type="checkbox" ${p.delivery?.state === 'done' ? 'checked' : ''} onchange="toggleProgressDone('delivery',this.checked)" class="w-4 h-4 accent-blue-600"> ${labels.delivery} sudah dilakukan</label></div>`));
+            body.insertAdjacentHTML('beforeend', stageCard('completed','fa-circle-check',`<label class="flex items-center gap-2 mt-2 text-[10px] font-bold text-slate-600"><input type="checkbox" ${p.completed?.state === 'done' ? 'checked' : ''} onchange="toggleProgressDone('completed',this.checked)" class="w-4 h-4 accent-emerald-600"> Selesai setelah konfirmasi customer</label>`));
+            toggleResiInput();
+            document.getElementById('modal-progress').classList.remove('hidden');
+        }
+
+        function closeProgressModal() { document.getElementById('modal-progress').classList.add('hidden'); activeProgressOrderId = null; }
+
+        function setProgressDecision(stage, decision) {
+            const body = document.getElementById('progress-modal-body');
+            const labels = body.querySelectorAll(`[data-progress-stage="${stage}"] input[type="checkbox"]`);
+            labels.forEach((cb,idx) => cb.checked = idx === (decision === 'approve' ? 0 : 1));
+            body.querySelector(`[data-progress-stage="${stage}"]`).dataset.decision = decision;
+        }
+
+        function toggleProgressDone(stage, checked) {
+            const card = document.querySelector(`[data-progress-stage="${stage}"]`); if (card) card.dataset.done = checked ? '1' : '0';
+        }
+
+        function toggleResiInput() {
+            const method = document.getElementById('progress-delivery-method')?.value;
+            const resi = document.getElementById('progress-resi'); if (resi) resi.classList.toggle('hidden', method !== 'Pengiriman');
+        }
+
+        function saveOrderProgress() {
+            if (!activeProgressOrderId) return;
+            let history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
+            const idx = history.findIndex(h => h.orderId === activeProgressOrderId); if (idx < 0) return;
+            const order = history[idx]; ensureOrderProgress(order);
+            const body = document.getElementById('progress-modal-body');
+            ['design','proof'].forEach(stage => { const card=body.querySelector(`[data-progress-stage="${stage}"]`); if(card){ const decision=card.dataset.decision || ''; order.progress[stage].decision=decision; order.progress[stage].state=decision==='approve'?'done':'pending'; }});
+            ['production','qc','completed'].forEach(stage => { const card=body.querySelector(`[data-progress-stage="${stage}"]`); if(card){ const done=card.dataset.done === '1' || !!card.querySelector('input[type="checkbox"]:checked'); order.progress[stage].state=done?'done':'pending'; if(stage==='completed') order.progress[stage].confirmed=done; }});
+            const method=document.getElementById('progress-delivery-method')?.value || ''; const resi=document.getElementById('progress-resi')?.value.trim() || '';
+            order.progress.delivery.method=method; order.progress.delivery.resi=resi; order.progress.delivery.state=(body.querySelector(`[data-progress-stage="delivery"] input[type="checkbox"]`)?.checked) ? 'done' : 'pending';
+            order.progress.payment = { state: 'done', decision: order.paymentStatus === 'Lunas' ? 'Lunas' : 'DP' };
+            history[idx]=order; localStorage.setItem('glamstitch_orders_history',JSON.stringify(history)); closeProgressModal(); renderHistoryList();
         }
 
         function deleteHistoryEntry(orderId) {
@@ -2601,6 +2798,15 @@
                 if (navBrand) navBrand.className = activeClass;
                 applyBrandUI();
             }
+        }
+
+        function parseMoneyInput(value) {
+            return parseInt(String(value ?? '').replace(/[^0-9]/g, ''), 10) || 0;
+        }
+
+        function formatMoneyInput(input) {
+            const raw = parseMoneyInput(input.value);
+            input.value = formatRupiah(raw);
         }
 
         function formatRupiah(num) {
