@@ -809,7 +809,7 @@
         }
 
         async function startDropboxLogin() {
-            if (!DROPBOX_CONFIG.appKey || DROPBOX_CONFIG.appKey === 'GANTI_APP_KEY_DI_SINI') {
+            if (!DROPBOX_CONFIG.appKey || DROPBOX_CONFIG.appKey === 'u5mrg5t1wrj1ho9') {
                 alert('Isi App Key Dropbox di DROPBOX_CONFIG dulu, bos.');
                 return false;
             }
@@ -2349,6 +2349,11 @@
                                 <button onclick="reloadHistoryToPreview('${h.orderId}')" class="px-2.5 sm:px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-bold transition flex items-center gap-1">
                                     <i class="fa-solid fa-print"></i> Cetak
                                 </button>
+                                ${remaining > 0 && h.paymentStatus !== 'Lunas' ? `
+                                <button onclick="markHistoryAsPaid('${h.orderId}')" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-xs font-bold transition flex items-center gap-1" title="Tandai Lunas">
+                                    <i class="fa-solid fa-circle-check"></i> Lunas
+                                </button>
+                                ` : ''}
                                 <button onclick="deleteHistoryEntry('${h.orderId}')" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition flex items-center gap-1" title="Hapus Data">
                                     <i class="fa-solid fa-trash"></i> Hapus
                                 </button>
@@ -2367,6 +2372,50 @@
                 renderDocumentPreview();
                 document.getElementById('modal-invoice').classList.remove('hidden');
             }
+        }
+
+        function markHistoryAsPaid(orderId) {
+            let history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
+            const targetIndex = history.findIndex(h => h.orderId === orderId);
+
+            if (targetIndex === -1) {
+                alert('Data transaksi tidak ditemukan.');
+                return;
+            }
+
+            const target = history[targetIndex];
+            const subtotal = (target.items || []).reduce((sum, item) => sum + (item.subtotal || 0), 0);
+            const grandTotal = Math.max(0, subtotal - (target.discount || 0));
+            const alreadyPaid = target.dpAmount || 0;
+            const remaining = Math.max(0, grandTotal - alreadyPaid);
+
+            if (remaining <= 0 || target.paymentStatus === 'Lunas') {
+                target.paymentStatus = 'Lunas';
+                target.dpAmount = grandTotal;
+                localStorage.setItem('glamstitch_orders_history', JSON.stringify(history));
+                renderHistoryList();
+                return;
+            }
+
+            const confirmLunas = confirm(
+                `Tandai nota #${orderId} sebagai LUNAS?\n\n` +
+                `Total: ${brandConfig.currency} ${formatRupiah(grandTotal)}\n` +
+                `Sudah dibayar (DP): ${brandConfig.currency} ${formatRupiah(alreadyPaid)}\n` +
+                `Pelunasan: ${brandConfig.currency} ${formatRupiah(remaining)}\n\n` +
+                `Sisa tagihan akan menjadi Rp 0 dan status pembayaran berubah menjadi LUNAS.`
+            );
+
+            if (!confirmLunas) return;
+
+            target.paymentStatus = 'Lunas';
+            target.dpAmount = grandTotal;
+            target.paidAt = Date.now();
+            target.paymentMethodDetail = `${target.paymentMethodDetail || 'Pembayaran'} • Pelunasan`;
+
+            history[targetIndex] = target;
+            localStorage.setItem('glamstitch_orders_history', JSON.stringify(history));
+
+            renderHistoryList();
         }
 
         function deleteHistoryEntry(orderId) {
