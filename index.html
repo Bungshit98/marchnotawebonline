@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Apparel POS Engine V5.3</title>
+    <title>Apparel POS & Invoice Generator V5</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -14,7 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- SheetJS CDN for Excel Export -->
+    <!-- SheetJS CDN for Excel (.xlsx) Export -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <script>
@@ -22,63 +22,94 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: { 50: '#f0f6ff', 100: '#e0edff', 500: '#2563eb', 600: '#1d4ed8', 700: '#1e40af', dark: '#0f172a' },
-                        surface: '#f8fafc', card: '#ffffff', accent: '#10b981'
+                        brand: {
+                            50: '#f0f6ff',
+                            100: '#e0edff',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            dark: '#0f172a'
+                        },
+                        surface: '#f8fafc',
+                        card: '#ffffff',
+                        accent: '#10b981'
                     },
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
                 }
             }
         }
     </script>
     <style>
-        * { -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #0f172a; overscroll-behavior-y: none; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-        .soft-shadow { box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03); }
-        .hover-lift { transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
-        @media (min-width: 768px) {
-            .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08); }
+        * {
+            -webkit-tap-highlight-color: transparent;
         }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        /* DOCUMENT PREVIEW / PRINT — invoice & thermal receipt only */
-        .document-a4 {
-            width: 794px;
-            min-height: 1123px;
-            box-sizing: border-box;
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            overscroll-behavior-y: none;
         }
-        .document-receipt {
-            width: 302px;
-            min-height: 420px;
-            box-sizing: border-box;
+        .mono {
             font-family: 'JetBrains Mono', monospace;
         }
-        .invoice-rule { border-color: #e2e8f0; }
-        .invoice-muted { color: #64748b; }
-        .invoice-label { color: #94a3b8; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
-        .invoice-table th { color:#94a3b8; font-size:10px; text-transform:uppercase; letter-spacing:.05em; font-weight:800; }
-        .invoice-table td { font-size:11px; vertical-align:top; }
-        .invoice-note { background:#fffbeb; border:1px solid #fde68a; }
-        .receipt-divider { border-top:1px dashed #94a3b8; }
-        .receipt-divider-bottom { border-bottom:1px dashed #94a3b8; }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .soft-shadow {
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+        }
+        .hover-lift {
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @media (min-width: 768px) {
+            .hover-lift:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+            }
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
 
         @media print {
-            @page { size: auto; margin: 0; }
-            body * { visibility: hidden !important; }
-            #print-area, #print-area * { visibility: visible !important; }
-            #print-area {
-                position: absolute; left: 0; top: 0;
-                margin: 0 !important;
-                box-shadow: none !important;
-                border-radius: 0 !important;
-                background: white !important;
+            body * {
+                visibility: hidden;
             }
-            #print-area.document-a4 { width: 210mm !important; min-height: 297mm !important; padding: 12mm !important; }
-            #print-area.document-receipt { width: 80mm !important; min-height: 0 !important; padding: 4mm !important; }
-            .no-print { display: none !important; }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -86,6 +117,7 @@
 
     <aside class="w-full md:w-20 lg:w-64 bg-[#0f172a] text-slate-300 flex flex-col justify-between z-20 flex-shrink-0 border-b md:border-b-0 md:border-r border-slate-800">
         <div>
+            <!-- Logo Section -->
             <div class="h-14 md:h-16 flex items-center justify-between md:justify-start px-4 md:px-6 border-b border-slate-800/80 gap-3">
                 <div class="flex items-center gap-2.5 sm:gap-3">
                     <div id="sidebar-logo-container" class="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-base sm:text-lg md:text-xl shadow-lg shadow-blue-500/30 overflow-hidden flex-shrink-0">
@@ -93,11 +125,12 @@
                     </div>
                     <div class="block overflow-hidden">
                         <h1 id="sidebar-brand-name" class="font-extrabold text-white text-xs sm:text-sm md:text-base tracking-tight leading-none truncate">GLAMSTITCH</h1>
-                        <p id="sidebar-brand-tagline" class="text-[8px] sm:text-[9px] md:text-[10px] text-blue-400 font-semibold tracking-wider uppercase mt-0.5 md:mt-1 truncate">POS Engine V5.3</p>
+                        <p id="sidebar-brand-tagline" class="text-[8px] sm:text-[9px] md:text-[10px] text-blue-400 font-semibold tracking-wider uppercase mt-0.5 md:mt-1 truncate">POS & Apparel Engine V5</p>
                     </div>
                 </div>
             </div>
 
+            <!-- Navigation Links -->
             <nav class="p-2 md:p-3 flex md:flex-col overflow-x-auto md:overflow-visible gap-1.5 no-scrollbar">
                 <a href="#" onclick="switchTab('pos')" id="nav-pos" class="nav-item flex items-center gap-2 md:gap-3 px-3 md:px-3.5 py-2 md:py-3 rounded-xl bg-blue-600 text-white font-medium text-xs md:text-sm transition-all shadow-md shadow-blue-600/20 whitespace-nowrap">
                     <i class="fa-solid fa-store w-4 md:w-5 text-center text-sm md:text-base"></i>
@@ -107,10 +140,6 @@
                     <i class="fa-solid fa-database w-4 md:w-5 text-center text-sm md:text-base"></i>
                     <span>Data Masuk & Transaksi</span>
                     <span id="nav-badge-count" class="inline-block ml-1 md:ml-auto bg-slate-700 text-slate-200 text-[10px] font-bold px-1.5 md:px-2 py-0.5 rounded-full">0</span>
-                </a>
-                <a href="#" onclick="switchTab('customers')" id="nav-customers" class="nav-item flex items-center gap-2 md:gap-3 px-3 md:px-3.5 py-2 md:py-2.5 md:ml-4 md:lg:ml-4 rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white font-medium text-xs transition-all whitespace-nowrap">
-                    <i class="fa-solid fa-address-book w-4 md:w-5 text-center text-sm md:text-base"></i>
-                    <span>Data Konsumen</span>
                 </a>
                 <a href="#" onclick="openReportModal()" class="nav-item flex items-center gap-2 md:gap-3 px-3 md:px-3.5 py-2 md:py-3 rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white font-medium text-xs md:text-sm transition-all whitespace-nowrap">
                     <i class="fa-solid fa-chart-line w-4 md:w-5 text-center text-sm md:text-base text-emerald-400"></i>
@@ -122,17 +151,19 @@
                 </a>
                 <a href="#" onclick="openBackupModal()" class="nav-item flex items-center gap-2 md:gap-3 px-3 md:px-3.5 py-2 md:py-3 rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white font-medium text-xs md:text-sm transition-all whitespace-nowrap">
                     <i class="fa-solid fa-file-export w-4 md:w-5 text-center text-sm md:text-base"></i>
-                    <span>Backup & Sync</span>
+                    <span>Backup & Restore</span>
                 </a>
             </nav>
         </div>
 
         <div class="p-3 border-t border-slate-800 hidden md:block">
             <div class="flex items-center gap-3 p-2.5 rounded-xl bg-slate-800/50 border border-slate-700/50">
-                <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">OP</div>
+                <div class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs">
+                    OP
+                </div>
                 <div class="overflow-hidden">
-                    <p class="text-xs font-semibold text-white truncate">Admin Kasir</p>
-                    <p id="cloud-status-badge" class="text-[10px] text-emerald-400 flex items-center gap-1 font-medium"><i class="fa-solid fa-circle text-[6px]"></i> Cloud Ready</p>
+                    <p class="text-xs font-semibold text-white truncate">Admin Garment</p>
+                    <p class="text-[10px] text-emerald-400 flex items-center gap-1 font-medium"><i class="fa-solid fa-circle text-[6px]"></i> System Ready</p>
                 </div>
             </div>
         </div>
@@ -167,20 +198,26 @@
                     <span id="product-count" class="text-[10px] sm:text-[11px] md:text-xs font-semibold text-slate-500 bg-slate-200/60 px-2.5 py-1 rounded-full whitespace-nowrap self-start sm:self-auto">11 Paket Tersedia</span>
                 </div>
 
-                <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"></div>
+                <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+                    <!-- Dynamic Product Cards -->
+                </div>
             </div>
         </section>
 
-        <!-- TAB 2: TRANSACTIONS PAGE -->
+        <!-- TAB 2: TRANSACTIONS & DATA INSPECTION PAGE -->
         <section id="tab-history-content" class="flex-1 flex-col overflow-y-auto md:overflow-hidden bg-slate-50 hidden">
             <header class="h-auto md:h-16 py-3 md:py-0 bg-white border-b border-slate-200 px-3 sm:px-4 md:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 flex-shrink-0">
                 <div>
                     <h2 class="text-sm sm:text-base md:text-lg font-bold text-slate-800">Data Masuk & Rekap Transaksi</h2>
                     <p class="text-[11px] sm:text-xs text-slate-500">Inspeksi semua nota pesanan yang telah diselesaikan</p>
                 </div>
-                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
                     <button onclick="openReportModal()" class="flex-1 sm:flex-initial px-3 sm:px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm">
                         <i class="fa-solid fa-chart-line"></i> <span>Laporan Sales</span>
+                    </button>
+                    <!-- CETAK ULANG BUTTON WITH FLOATING SEARCH FLOW -->
+                    <button onclick="openReprintModal()" class="flex-1 sm:flex-initial px-3 sm:px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm">
+                        <i class="fa-solid fa-print"></i> <span>Cetak Ulang</span>
                     </button>
                     <button onclick="exportJSONBackup()" class="flex-1 sm:flex-initial px-3 sm:px-3.5 py-2 rounded-xl bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700 transition flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm">
                         <i class="fa-solid fa-download"></i> Export JSON
@@ -189,6 +226,7 @@
             </header>
 
             <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
+                <!-- Analytics Summary Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 md:gap-4">
                     <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 soft-shadow">
                         <span class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Total Pesanan Selesai</span>
@@ -213,6 +251,7 @@
                     </div>
                 </div>
 
+                <!-- Filter Controls -->
                 <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 soft-shadow flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                     <div class="flex items-center gap-2 flex-1">
                         <i class="fa-solid fa-search text-slate-400 text-xs sm:text-sm"></i>
@@ -228,29 +267,14 @@
                     </div>
                 </div>
 
-                <div id="history-list" class="space-y-2.5 sm:space-y-3"></div>
+                <!-- History Table & List -->
+                <div id="history-list" class="space-y-2.5 sm:space-y-3">
+                    <!-- Dynamic Transaction Entries -->
+                </div>
             </div>
         </section>
 
-        <!-- TAB: DATA KONSUMEN PAGE -->
-        <section id="tab-customers-content" class="flex-1 flex-col overflow-y-auto md:overflow-hidden bg-slate-50 hidden">
-            <header class="h-auto md:h-16 py-3 md:py-0 bg-white border-b border-slate-200 px-3 sm:px-4 md:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 flex-shrink-0">
-                <div>
-                    <h2 class="text-sm sm:text-base md:text-lg font-bold text-slate-800">Data Konsumen</h2>
-                    <p class="text-[11px] sm:text-xs text-slate-500">Nama konsumen / tim, no. telp, dan alamat pengiriman dari invoice/struk</p>
-                </div>
-                <span id="customer-data-count" class="text-[10px] sm:text-[11px] md:text-xs font-semibold text-slate-500 bg-slate-200/60 px-2.5 py-1 rounded-full whitespace-nowrap">0 Konsumen</span>
-            </header>
-            <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">
-                <div class="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 soft-shadow flex items-center gap-2">
-                    <i class="fa-solid fa-search text-slate-400 text-xs sm:text-sm"></i>
-                    <input type="text" id="customer-search-input" onkeyup="renderCustomerData()" placeholder="Cari nama / tim, no. telp, atau alamat..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500">
-                </div>
-                <div id="customer-data-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-3"></div>
-            </div>
-        </section>
-
-        <!-- TAB 3: BRAND SETTINGS PAGE -->
+        <!-- TAB 3: BRAND SETTINGS & CUSTOM NOTES PAGE (FULL PAGE LAYOUT) -->
         <section id="tab-brand-content" class="flex-1 flex-col overflow-y-auto md:overflow-hidden bg-slate-50 hidden">
             <header class="h-auto md:h-16 py-3 md:py-0 bg-white border-b border-slate-200 px-3 sm:px-4 md:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 flex-shrink-0 soft-shadow">
                 <div class="flex items-center gap-2.5 sm:gap-3">
@@ -269,6 +293,7 @@
 
             <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 max-w-5xl mx-auto w-full space-y-4 sm:space-y-6">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                    <!-- Profile & Branding Section -->
                     <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 soft-shadow space-y-3.5 sm:space-y-4">
                         <h3 class="font-bold text-slate-800 text-xs sm:text-sm border-b border-slate-100 pb-2 flex items-center gap-2">
                             <i class="fa-solid fa-store text-blue-600"></i> Profil & Logo Brand
@@ -313,11 +338,14 @@
                         </div>
                     </div>
 
+                    <!-- Payment Accounts & Custom Info Section -->
                     <div class="space-y-4 sm:space-y-6">
                         <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 soft-shadow space-y-3.5 sm:space-y-4">
                             <h3 class="font-bold text-slate-800 text-xs sm:text-sm border-b border-slate-100 pb-2 flex items-center gap-2">
                                 <i class="fa-solid fa-credit-card text-emerald-600"></i> Custom Info Pembayaran & No. Rekening Toko
                             </h3>
+                            <p class="text-[11px] text-slate-500">Informasi rekening ini akan otomatis diperbarui di dropdown pilihan pembayaran kasir & dicetak pada nota/invoice.</p>
+                            
                             <div class="space-y-3 text-xs">
                                 <div>
                                     <label class="font-bold text-slate-600 block mb-1">No. Rekening BCA & atas nama</label>
@@ -334,17 +362,20 @@
                             </div>
                         </div>
 
+                        <!-- Notes Section -->
                         <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 soft-shadow space-y-2.5 sm:space-y-3">
                             <h3 class="font-bold text-slate-800 text-xs sm:text-sm border-b border-slate-100 pb-2 flex items-center gap-2">
                                 <i class="fa-solid fa-lock text-amber-600"></i> Catatan Tim & Syarat Ketentuan Nota (Terkunci)
                             </h3>
-                            <textarea id="cfg-custom-notes" rows="3" placeholder="1. DP minimal 50%..." class="w-full p-2.5 sm:p-3 bg-amber-50/50 border border-amber-200 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 text-xs font-medium"></textarea>
+                            <p class="text-[11px] text-slate-400">Instruksi garansi, DP pelunasan, atau syarat tim yang otomatis terkunci pada semua cetakan Invoice & Struk Thermal.</p>
+                            <textarea id="cfg-custom-notes" rows="3" placeholder="1. DP minimal 50% untuk pengerjaan nota.&#10;2. Garansi komplain maksimal 3 hari setelah barang diterima.&#10;3. Pelunasan dilakukan sebelum pengiriman." class="w-full p-2.5 sm:p-3 bg-amber-50/50 border border-amber-200 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 text-xs font-medium"></textarea>
                         </div>
 
+                        <!-- System Reset -->
                         <div class="bg-rose-50/60 p-3.5 sm:p-4 rounded-2xl border border-rose-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-4">
                             <div>
                                 <p class="text-xs font-bold text-rose-900">Reset Keseluruhan Web</p>
-                                <p class="text-[11px] text-rose-700">Kembalikan data transaksi, riwayat & setting ke awal.</p>
+                                <p class="text-[11px] text-rose-700">Kembalikan data transaksi, riwayat & setting ke pengaturan awal.</p>
                             </div>
                             <button onclick="triggerFullWebReset()" class="w-full sm:w-auto px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap">
                                 <i class="fa-solid fa-triangle-exclamation"></i> Reset System
@@ -356,7 +387,7 @@
         </section>
 
         <!-- RIGHT SIDEBAR: ORDER SUMMARY PANEL -->
-        <aside class="order-first md:order-none w-full md:w-80 lg:w-96 bg-white border-b md:border-b-0 md:border-l border-slate-200 flex flex-col h-auto md:h-full z-10 soft-shadow flex-shrink-0">
+        <aside class="w-full md:w-80 lg:w-96 bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col h-auto md:h-full z-10 soft-shadow flex-shrink-0">
             <div class="p-3.5 sm:p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
@@ -367,7 +398,9 @@
                         <p class="text-[10px] sm:text-[11px] text-slate-400 mono" id="cart-order-id">ID: #ORD-...</p>
                     </div>
                 </div>
-                <button onclick="clearCart()" class="text-xs font-semibold text-rose-500 hover:text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-lg transition">Reset Cart</button>
+                <button onclick="clearCart()" class="text-xs font-semibold text-rose-500 hover:text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-lg transition">
+                    Reset Cart
+                </button>
             </div>
 
             <div class="p-3.5 sm:p-4 border-b border-slate-100 space-y-2.5 bg-white">
@@ -380,10 +413,6 @@
                         <input type="text" id="cust-name" oninput="searchCustomers()" onfocus="searchCustomers()" placeholder="Cari / Ketik Nama Pemesan..." class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white transition" autocomplete="off">
                         <div id="customer-suggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-30 max-h-48 overflow-y-auto divide-y divide-slate-100"></div>
                     </div>
-                </div>
-                <div>
-                    <label class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Alamat Konsumen</label>
-                    <textarea id="cust-address" rows="2" placeholder="Alamat pengiriman lengkap..." class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 focus:bg-white transition resize-none"></textarea>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -399,6 +428,7 @@
                     </div>
                 </div>
 
+                <!-- MANUAL PAYMENT METHOD SELECTOR -->
                 <div class="pt-1">
                     <label class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Metode & Detail Pembayaran</label>
                     <select id="payment-method" onchange="toggleCustomPaymentInput()" class="w-full px-2 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 font-medium mb-1.5">
@@ -449,7 +479,7 @@
         </aside>
     </main>
 
-    <!-- ADD-ON MODAL -->
+    <!-- ADD-ON & PRODUCT CUSTOMIZATION MODAL -->
     <div id="modal-addon" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2.5 sm:p-4">
         <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[92vh] flex flex-col soft-shadow overflow-hidden border border-slate-100 my-auto">
             <div class="px-3.5 sm:px-6 py-3 sm:py-4 bg-slate-900 text-white flex items-center justify-between flex-shrink-0">
@@ -468,17 +498,19 @@
             </div>
 
             <div class="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-6">
+                <!-- Apparel Option Type -->
                 <div id="group-apparel-type" class="space-y-1.5 sm:space-y-2">
                     <label class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 block">1. Variasi Produk Utama</label>
                     <div id="type-radio-group" class="grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
                 </div>
 
+                <!-- Quantity & Min Order Rule -->
                 <div class="bg-blue-50 border border-blue-200/80 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div class="flex items-center gap-2.5">
                         <i class="fa-solid fa-circle-info text-blue-600 text-sm sm:text-base flex-shrink-0"></i>
                         <div>
                             <p class="text-xs font-semibold text-blue-900">Jumlah Pesanan (Qty)</p>
-                            <p id="modal-min-qty-label" class="text-[10px] sm:text-[11px] text-blue-700">Minimal pemesanan: 1 Pcs</p>
+                            <p id="modal-min-qty-label" class="text-[10px] sm:text-[11px] text-blue-700">Minimal pemesanan untuk paket ini: 1 Pcs</p>
                         </div>
                     </div>
                     <div class="flex items-center justify-end gap-2 bg-white px-2 py-1 rounded-lg border border-blue-200 self-end sm:self-auto">
@@ -488,6 +520,7 @@
                     </div>
                 </div>
 
+                <!-- Collars Selection -->
                 <div class="space-y-1.5 sm:space-y-2">
                     <label class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 block">2. Model Kerah</label>
                     <select id="addon-collar" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500">
@@ -497,40 +530,42 @@
                     </select>
                 </div>
 
+                <!-- Sleeves & Patterns & Upgrades Checkboxes -->
                 <div class="space-y-1.5 sm:space-y-2">
                     <label class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 block">3. Custom Pola & Upgrade Spesifikasi</label>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <label class="flex items-center p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100/80 transition text-xs">
-                            <input type="checkbox" id="add-longsleeve" value="25000" class="w-4 h-4 text-blue-600 rounded">
+                            <input type="checkbox" id="add-longsleeve" value="25000" data-name="Lngn Panjang Karet" class="w-4 h-4 text-blue-600 rounded">
                             <span class="ml-2 font-medium text-slate-700">Lngn Panjang Karet (+25rb)</span>
                         </label>
                         <label class="flex items-center p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100/80 transition text-xs">
-                            <input type="checkbox" id="add-hoodie" value="15000" class="w-4 h-4 text-blue-600 rounded">
+                            <input type="checkbox" id="add-hoodie" value="15000" data-name="Kupluk / Hoodie" class="w-4 h-4 text-blue-600 rounded">
                             <span class="ml-2 font-medium text-slate-700">Kupluk / Hoodie (+15rb)</span>
                         </label>
                         <label class="flex items-center p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100/80 transition text-xs">
-                            <input type="checkbox" id="add-fabric-2" value="20000" class="w-4 h-4 text-blue-600 rounded">
+                            <input type="checkbox" id="add-fabric-2" value="20000" data-name="Upgrade Bahan Lv.2 (Embosh, Airwalk, Dropneedle)" class="w-4 h-4 text-blue-600 rounded">
                             <span class="ml-2 font-medium text-slate-700">Bahan Lv.2 (Embosh/Airwalk) (+20rb)</span>
                         </label>
                         <label class="flex items-center p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100/80 transition text-xs">
-                            <input type="checkbox" id="add-fabric-3" value="30000" class="w-4 h-4 text-blue-600 rounded">
+                            <input type="checkbox" id="add-fabric-3" value="30000" data-name="Upgrade Bahan Lv.3 (Milano UV, Microcool, Active Air)" class="w-4 h-4 text-blue-600 rounded">
                             <span class="ml-2 font-medium text-slate-700">Bahan Lv.3 (Milano UV/Micro) (+30rb)</span>
                         </label>
                         <label class="flex items-center p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100/80 transition text-xs">
-                            <input type="checkbox" id="add-raglan" value="20000" class="w-4 h-4 text-blue-600 rounded">
+                            <input type="checkbox" id="add-raglan" value="20000" data-name="Pola Raglan" class="w-4 h-4 text-blue-600 rounded">
                             <span class="ml-2 font-medium text-slate-700">Pola Raglan (+20rb)</span>
                         </label>
                         <label class="flex items-center p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100/80 transition text-xs">
-                            <input type="checkbox" id="add-oversize" value="25000" class="w-4 h-4 text-blue-600 rounded">
+                            <input type="checkbox" id="add-oversize" value="25000" data-name="Pola Oversize" class="w-4 h-4 text-blue-600 rounded">
                             <span class="ml-2 font-medium text-slate-700">Pola Oversize (+25rb)</span>
                         </label>
                         <label class="flex items-center p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl cursor-pointer hover:bg-blue-100/80 transition text-xs col-span-1 sm:col-span-2">
-                            <input type="checkbox" id="add-dtf-pkg" value="35000" class="w-4 h-4 text-blue-600 rounded">
+                            <input type="checkbox" id="add-dtf-pkg" value="35000" data-name="DTF Package Lengkap (Logo, Apparel, 1 Sponsor Depan, 1 Sponsor Blk, Nama, No Punggung, Apparel Celana, No Celana)" class="w-4 h-4 text-blue-600 rounded">
                             <span class="ml-2 font-bold text-blue-900">DTF Package Complete (Logo + Apparel + Sponsor + Nama/No) (+35rb)</span>
                         </label>
                     </div>
                 </div>
 
+                <!-- Up Size Selection -->
                 <div class="space-y-1.5 sm:space-y-2">
                     <label class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 block">4. Surcharge Ukuran Khusus (Up Size)</label>
                     <select id="addon-upsize" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500">
@@ -543,6 +578,7 @@
                     </select>
                 </div>
 
+                <!-- Logo Selections with Override Alert -->
                 <div class="space-y-1.5 sm:space-y-2">
                     <div class="flex items-center justify-between">
                         <label class="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 block">5. Jenis & Teknik Logo</label>
@@ -554,8 +590,8 @@
                         <option value="0" data-name="Printing Logo">Printing Logo (FREE)</option>
                         <option value="5000" id="opt-logo-dtf" data-name="DTF Logo">DTF Logo (+5.000)</option>
                         <option value="20000" data-name="3D Embosh Logo">3D Embosh (+20.000)</option>
-                        <option value="20000" data-name="3D Tatami Logo">3D Tatami (+20.000 - Min 12 Pcs)</option>
-                        <option value="25000" data-name="3D TPU Logo">3D TPU (+25.000 - Min 12 Pcs)</option>
+                        <option value="20000" data-name="3D Tatami Logo" data-min="12">3D Tatami (+20.000 - Min 12 Pcs)</option>
+                        <option value="25000" data-name="3D TPU Logo" data-min="12">3D TPU (+25.000 - Min 12 Pcs)</option>
                         <option value="15000" data-name="Semi-Woven Logo">Semi-Woven (+15.000)</option>
                     </select>
                 </div>
@@ -574,7 +610,7 @@
         </div>
     </div>
 
-    <!-- INVOICE MODAL -->
+    <!-- DUAL MODE INVOICE / RECEIPT PREVIEW MODAL -->
     <div id="modal-invoice" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-2xl w-full max-w-3xl max-h-[95vh] flex flex-col soft-shadow overflow-hidden border border-slate-100">
             <div class="no-print p-3 sm:p-4 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 flex-shrink-0">
@@ -599,65 +635,72 @@
             </div>
 
             <div class="flex-1 overflow-y-auto p-3 sm:p-8 bg-slate-100 flex justify-center">
-                <div id="print-area" class="bg-white text-slate-800 transition-all"></div>
+                <div id="print-area" class="bg-white text-slate-800 p-4 sm:p-8 rounded-xl soft-shadow transition-all w-full max-w-2xl min-h-[500px]"></div>
             </div>
         </div>
     </div>
 
-    <!-- DROPBOX AUTOMATIC AUTH & BACKUP MODAL -->
-    <div id="modal-backup" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md p-5 sm:p-6 soft-shadow space-y-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold text-slate-800 text-sm sm:text-base">Backup & Synchronize Data</h3>
-                <button onclick="closeBackupModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+    <!-- FLOATING REPRINT SEARCH MODAL -->
+    <div id="modal-reprint" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg p-4 sm:p-6 soft-shadow space-y-4 max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-print"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm sm:text-base">Cetak Ulang Nota / Invoice</h3>
+                        <p class="text-[11px] text-slate-400">Cari nota berdasarkan ID atau nama pemesan</p>
+                    </div>
+                </div>
+                <button onclick="closeReprintModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
-            <div class="bg-blue-50/80 border border-blue-200 rounded-2xl p-4 space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-extrabold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
-                        <i class="fa-brands fa-dropbox text-blue-600 text-sm"></i> Dropbox Cloud Sync
-                    </span>
-                    <span id="modal-cloud-badge" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Ready</span>
-                </div>
-
-                <div class="space-y-2">
-                    <p class="text-xs text-blue-800 leading-relaxed">Klik tombol di bawah ini 1x untuk menghubungkan web ke Dropbox secara otomatis:</p>
-                    <button onclick="startDropboxOAuth()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-md shadow-blue-600/20">
-                        <i class="fa-solid fa-key"></i> Connect Dropbox
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-blue-200/60">
-                    <button onclick="triggerManualUploadDropbox()" class="py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> Push ke Cloud
-                    </button>
-                    <button onclick="triggerManualDownloadDropbox()" class="py-2 bg-white border border-blue-200 hover:bg-blue-50 text-blue-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
-                        <i class="fa-solid fa-cloud-arrow-down"></i> Pull dari Cloud
-                    </button>
-                </div>
+            <!-- Floating Search Input Bar -->
+            <div class="relative">
+                <i class="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="reprint-search-input" onkeyup="searchReprintOrders()" placeholder="Ketik ID Nota (#ORD-...) atau Nama Pemesan..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white transition">
             </div>
 
-            <div class="border-t border-slate-100 pt-3 space-y-2">
-                <p class="text-xs font-bold text-slate-700 uppercase tracking-wider">Backup Offline File (.JSON)</p>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="exportJSONBackup()" class="py-2 bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
-                        <i class="fa-solid fa-download"></i> Download
-                    </button>
+            <!-- Search Results Container -->
+            <div id="reprint-results-list" class="flex-1 overflow-y-auto space-y-2 max-h-[350px] pr-1">
+                <!-- Dynamic Search Result Entries -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JSON BACKUP & RESTORE MODAL -->
+    <div id="modal-backup" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md p-5 sm:p-6 soft-shadow space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-slate-800 text-sm sm:text-base">Backup & Restore Data</h3>
+                <button onclick="closeBackupModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                Kelola data transaksi & riwayat nota dalam format JSON agar dapat digunakan antar perangkat tanpa perlu database server.
+            </p>
+
+            <div class="space-y-3 pt-2">
+                <button onclick="exportJSONBackup()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-download"></i> Backup Data / Export JSON
+                </button>
+
+                <div class="relative">
                     <input type="file" id="import-file-input" accept=".json" onchange="importJSONBackup(event)" class="hidden">
-                    <button onclick="document.getElementById('import-file-input').click()" class="py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1">
-                        <i class="fa-solid fa-upload"></i> Import
+                    <button onclick="document.getElementById('import-file-input').click()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-upload"></i> Restore Data / Import JSON
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- REPORT MODAL -->
+    <!-- EXECUTIVE SALES REPORT MODAL -->
     <div id="modal-report" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2.5 sm:p-4">
         <div class="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col soft-shadow overflow-hidden border border-slate-100 my-auto">
             <div class="px-3.5 sm:px-6 py-3 sm:py-4 bg-slate-900 text-white flex items-center justify-between flex-shrink-0">
                 <div class="flex items-center gap-2.5 sm:gap-3">
-                    <div class="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-emerald-600 flex items-center justify-center font-bold text-white shadow-md text-xs sm:text-base flex-shrink-0">
+                    <div class="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-emerald-600 flex items-center justify-center font-bold text-white shadow-md shadow-emerald-600/30 text-xs sm:text-base flex-shrink-0">
                         <i class="fa-solid fa-chart-pie"></i>
                     </div>
                     <div>
@@ -689,357 +732,14 @@
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-6" id="report-modal-content"></div>
+            <div class="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-6" id="report-modal-content">
+                <!-- Dynamic Report Analytics Content -->
+            </div>
         </div>
     </div>
 
     <script>
-        /* =========================================================================
-           DROPBOX CLOUD SYNC
-           - Browser-safe OAuth 2 PKCE (NO APP SECRET IN HTML)
-           - Offline access => long-lived refresh token
-           - Access token refreshes automatically
-           - JSON database is the single cloud backup
-           ========================================================================= */
-        const DROPBOX_APP_KEY   = "u5mrg5t1wrj1ho9";
-        const DROPBOX_FILE_PATH = "/glamstitch_pos_db.json";
-        const DROPBOX_SCOPES    = ["files.content.read", "files.content.write"];
-
-        let cachedAccessToken = null;
-        let accessTokenExpiresAt = 0;
-        let syncInProgress = false;
-        let syncQueued = false;
-
-        function setCloudStatus(status) {
-            const badge = document.getElementById('cloud-status-badge');
-            const modalBadge = document.getElementById('modal-cloud-badge');
-            if (badge) {
-                if (status === 'syncing') badge.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin text-[8px]"></i> Syncing...`;
-                else if (status === 'success') badge.innerHTML = `<i class="fa-solid fa-circle text-[6px]"></i> Cloud Ready`;
-                else badge.innerHTML = `<i class="fa-solid fa-wifi text-[8px]"></i> Error / Offline`;
-            }
-            if (modalBadge) {
-                if (status === 'syncing') {
-                    modalBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800";
-                    modalBadge.innerText = "Syncing...";
-                } else if (status === 'success') {
-                    modalBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800";
-                    modalBadge.innerText = "Ready";
-                } else {
-                    modalBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800";
-                    modalBadge.innerText = "Error";
-                }
-            }
-        }
-
-        function dropboxRedirectUri() {
-            return window.location.href.split('?')[0].split('#')[0];
-        }
-
-        function base64UrlEncode(bytes) {
-            let binary = '';
-            bytes.forEach(b => binary += String.fromCharCode(b));
-            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-        }
-
-        function randomPkceVerifier() {
-            const bytes = new Uint8Array(64);
-            crypto.getRandomValues(bytes);
-            return base64UrlEncode(bytes);
-        }
-
-        async function sha256Base64Url(value) {
-            const data = new TextEncoder().encode(value);
-            const digest = await crypto.subtle.digest('SHA-256', data);
-            return base64UrlEncode(new Uint8Array(digest));
-        }
-
-        async function startDropboxOAuth() {
-            if (!DROPBOX_APP_KEY || DROPBOX_APP_KEY.includes("MASUKKAN_APP_KEY")) {
-                alert("ERR: APP_KEY Dropbox belum diisi di dalam kode HTML!");
-                return;
-            }
-
-            if (!window.crypto?.subtle) {
-                alert("Browser ini tidak mendukung PKCE/Web Crypto. Buka web melalui HTTPS.");
-                return;
-            }
-
-            const redirectUri = dropboxRedirectUri();
-            const state = randomPkceVerifier();
-            const verifier = randomPkceVerifier();
-            const challenge = await sha256Base64Url(verifier);
-
-            sessionStorage.setItem('dbx_oauth_state', state);
-            sessionStorage.setItem('dbx_pkce_verifier', verifier);
-
-            const params = new URLSearchParams({
-                client_id: DROPBOX_APP_KEY,
-                response_type: 'code',
-                token_access_type: 'offline',
-                redirect_uri: redirectUri,
-                state,
-                code_challenge: challenge,
-                code_challenge_method: 'S256',
-                scope: DROPBOX_SCOPES.join(' ')
-            });
-
-            window.location.href = `https://www.dropbox.com/oauth2/authorize?${params.toString()}`;
-        }
-
-        async function handleOAuthCallback() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get('code');
-            if (!code) return false;
-
-            const returnedState = urlParams.get('state');
-            const savedState = sessionStorage.getItem('dbx_oauth_state');
-            const verifier = sessionStorage.getItem('dbx_pkce_verifier');
-
-            if (!returnedState || !savedState || returnedState !== savedState || !verifier) {
-                alert("OAuth Dropbox gagal: sesi authorization tidak valid. Silakan Connect Dropbox lagi.");
-                return false;
-            }
-
-            try {
-                const response = await fetch('https://api.dropbox.com/oauth2/token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: new URLSearchParams({
-                        code,
-                        grant_type: 'authorization_code',
-                        redirect_uri: dropboxRedirectUri(),
-                        client_id: DROPBOX_APP_KEY,
-                        code_verifier: verifier
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok || !data.access_token || !data.refresh_token) {
-                    throw new Error(data.error_description || data.error_summary || 'Token Dropbox tidak diterima.');
-                }
-
-                localStorage.setItem('dbx_refresh_token', data.refresh_token);
-                cachedAccessToken = data.access_token;
-                accessTokenExpiresAt = Date.now() + ((Number(data.expires_in) || 14400) * 1000) - 60000;
-
-                sessionStorage.removeItem('dbx_oauth_state');
-                sessionStorage.removeItem('dbx_pkce_verifier');
-
-                window.history.replaceState({}, document.title, window.location.pathname);
-
-                setCloudStatus('success');
-                await loadFromDropbox();
-
-                return true;
-            } catch (err) {
-                setCloudStatus('error');
-                alert("Gagal menghubungkan Dropbox: " + err.message);
-                return false;
-            }
-        }
-
-        async function getValidAccessToken() {
-            // Give the current token a small safety margin before expiry.
-            if (cachedAccessToken && Date.now() < accessTokenExpiresAt) {
-                return cachedAccessToken;
-            }
-
-            const refreshToken = localStorage.getItem('dbx_refresh_token');
-            if (!DROPBOX_APP_KEY || !refreshToken) return null;
-
-            try {
-                const response = await fetch('https://api.dropbox.com/oauth2/token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: new URLSearchParams({
-                        grant_type: 'refresh_token',
-                        refresh_token: refreshToken,
-                        client_id: DROPBOX_APP_KEY
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok || !data.access_token) {
-                    cachedAccessToken = null;
-                    accessTokenExpiresAt = 0;
-                    return null;
-                }
-
-                cachedAccessToken = data.access_token;
-                accessTokenExpiresAt = Date.now() + ((Number(data.expires_in) || 14400) * 1000) - 60000;
-                return cachedAccessToken;
-            } catch (err) {
-                cachedAccessToken = null;
-                accessTokenExpiresAt = 0;
-                return null;
-            }
-        }
-
-        async function dropboxRequest(url, options = {}, retry = true) {
-            const token = await getValidAccessToken();
-            if (!token) return null;
-
-            const headers = new Headers(options.headers || {});
-            headers.set('Authorization', `Bearer ${token}`);
-
-            const response = await fetch(url, { ...options, headers });
-
-            // If Dropbox rejects an expired token, refresh once and retry automatically.
-            if (response.status === 401 && retry) {
-                cachedAccessToken = null;
-                accessTokenExpiresAt = 0;
-                const freshToken = await getValidAccessToken();
-                if (!freshToken) return response;
-
-                headers.set('Authorization', `Bearer ${freshToken}`);
-                return fetch(url, { ...options, headers });
-            }
-
-            return response;
-        }
-
-        async function loadFromDropbox(isManual = false) {
-            setCloudStatus('syncing');
-
-            try {
-                const response = await dropboxRequest(
-                    'https://content.dropboxapi.com/2/files/download',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Dropbox-API-Arg': JSON.stringify({ path: DROPBOX_FILE_PATH })
-                        }
-                    }
-                );
-
-                if (!response) {
-                    setCloudStatus('error');
-                    if (isManual) alert("Dropbox belum terhubung! Klik 'Connect Dropbox' di menu Backup & Sync.");
-                    return false;
-                }
-
-                if (response.ok) {
-                    const data = await response.json();
-
-                    if (data && typeof data === 'object') {
-                        mergeIncomingData(data);
-
-                        renderHistoryList();
-                        applyBrandUI();
-                        setCloudStatus('success');
-
-                        if (isManual) alert('SUKSES! Data ditarik dari Cloud.');
-                        return true;
-                    }
-                }
-
-                // First-time setup: if the cloud file does not exist yet,
-                // create it from the current local database automatically.
-                if (response.status === 409) {
-                    setCloudStatus('success');
-                    await syncToDropbox(false);
-                    return true;
-                }
-
-                setCloudStatus('error');
-                if (isManual) alert('File cloud belum ada atau terjadi masalah koneksi.');
-                return false;
-            } catch (err) {
-                setCloudStatus('error');
-                if (isManual) alert('GAGAL KONEKSI: ' + err.message);
-                return false;
-            }
-        }
-
-        function buildDropboxPayload() {
-            return {
-                app: 'Glamstitch POS Engine V5.3',
-                lastUpdated: new Date().toISOString(),
-                brandConfig: JSON.parse(localStorage.getItem('glamstitch_brand_config') || '{}'),
-                customersDatabase: JSON.parse(localStorage.getItem('glamstitch_customers') || '[]'),
-                ordersHistory: JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]')
-            };
-        }
-
-        async function syncToDropbox(isManual = false) {
-            // If several checkout/settings actions happen almost together,
-            // queue them instead of letting an older request overwrite a newer one.
-            if (syncInProgress) {
-                syncQueued = true;
-                return;
-            }
-
-            syncInProgress = true;
-            setCloudStatus('syncing');
-
-            try {
-                const payload = buildDropboxPayload();
-                const response = await dropboxRequest(
-                    'https://content.dropboxapi.com/2/files/upload',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Dropbox-API-Arg': JSON.stringify({
-                                path: DROPBOX_FILE_PATH,
-                                mode: 'overwrite',
-                                autorename: false,
-                                mute: true
-                            }),
-                            'Content-Type': 'application/octet-stream'
-                        },
-                        body: JSON.stringify(payload, null, 2)
-                    }
-                );
-
-                if (!response) {
-                    setCloudStatus('error');
-                    if (isManual) alert("Dropbox belum terhubung!");
-                    return false;
-                }
-
-                if (response.ok) {
-                    setCloudStatus('success');
-                    if (isManual) alert('SUKSES! Data tersimpan di Cloud.');
-                    return true;
-                }
-
-                setCloudStatus('error');
-                if (isManual) alert('GAGAL UPLOAD ke Dropbox.');
-                return false;
-            } catch (err) {
-                setCloudStatus('error');
-                if (isManual) alert('GAGAL KONEKSI: ' + err.message);
-                return false;
-            } finally {
-                syncInProgress = false;
-
-                if (syncQueued) {
-                    syncQueued = false;
-                    // Upload the newest localStorage snapshot after the current
-                    // request finishes.
-                    setTimeout(() => syncToDropbox(false), 0);
-                }
-            }
-        }
-
-        function triggerManualUploadDropbox() {
-            syncToDropbox(true);
-        }
-
-        function triggerManualDownloadDropbox() {
-            loadFromDropbox(true);
-        }
-
-        /* =========================================================================
-           POS CORE ENGINE & CATALOG DATA
-           ========================================================================= */
+        /* 1. MASTER CATALOG PRODUCTS */
         const PRODUCTS = [
             { id: 1, name: 'Paket Ekonomis Polos Plan', category: 'jersey', desc: 'Sangat terjangkau untuk kebutuhan jersey dasar.', minQty: 1, options: [{ label: 'Atasan', price: 60000 }, { label: 'Setelan', price: 90000 }] },
             { id: 2, name: 'Paket Basic Plan DTF Only', category: 'jersey', desc: 'Sudah termasuk sablon DTF dasar.', minQty: 1, options: [{ label: 'Atasan', price: 90000 }, { label: 'Setelan', price: 120000 }] },
@@ -1054,8 +754,11 @@
             { id: 11, name: 'Polo Bordir Premium Standard', category: 'polo', desc: 'Bahan lacoste premium & bordir padat.', minQty: 24, options: [{ label: 'Default Minimum 24 Pcs', price: 149000 }] }
         ];
 
+        /* 2. STATE MANAGEMENT STORE */
         let cart = [];
+        let currentEditingItem = null;
         let selectedProductForModal = null;
+        let selectedOptionForModal = null;
         let documentMode = 'invoice';
         let previewOrderStore = null;
 
@@ -1063,30 +766,38 @@
             name: 'GLAMSTITCH',
             tagline: 'POS & Apparel Engine V5',
             currency: 'Rp',
-            address: 'Jl. Apparel Garment No. 88, Jakarta',
+            address: 'Jl. Apparel Garment No. 88, Kawasan Industri Textile, Jakarta',
             whatsapp: '0812-3456-7890',
             instagram: '@glamstitch.apparel',
             logoUrl: '',
             bcaAccount: '123-456-7890 a/n Glamstitch',
             mandiriAccount: '987-654-3210 a/n Glamstitch',
             qrisDetail: 'Scan QR Kasir',
-            customNotes: '1. DP minimal 50% untuk pengerjaan nota.\n2. Garansi komplain 3 hari.\n3. Pelunasan sebelum pengiriman.'
+            customNotes: '1. DP minimal 50% untuk pengerjaan nota.\n2. Garansi cacat produksi maksimal 3 hari setelah barang diterima.\n3. Pelunasan dilakukan sebelum pengiriman / pengambilan barang.'
         }));
 
-        window.onload = async function() {
+        window.onload = function() {
             applyBrandUI();
             renderCatalog('all');
             generateNewOrderId();
             renderCart();
-            renderHistoryList();
 
-            const oauthHandled = await handleOAuthCallback();
-            if (!oauthHandled) {
-                await loadFromDropbox();
-            }
+            // Auto-setup DTF listener
+            document.getElementById('add-dtf-pkg').addEventListener('change', calculateModalPrice);
+            document.getElementById('addon-collar').addEventListener('change', calculateModalPrice);
+            document.getElementById('add-longsleeve').addEventListener('change', calculateModalPrice);
+            document.getElementById('add-hoodie').addEventListener('change', calculateModalPrice);
+            document.getElementById('add-fabric-2').addEventListener('change', calculateModalPrice);
+            document.getElementById('add-fabric-3').addEventListener('change', calculateModalPrice);
+            document.getElementById('add-raglan').addEventListener('change', calculateModalPrice);
+            document.getElementById('add-oversize').addEventListener('change', calculateModalPrice);
+            document.getElementById('addon-upsize').addEventListener('change', calculateModalPrice);
+            document.getElementById('addon-logo').addEventListener('change', calculateModalPrice);
+
+            renderHistoryList();
         };
 
-        /* CUSTOMER AUTOCOMPLETE ENGINE */
+        /* CLOSE CUSTOMER DROPDOWN ON OUTSIDE CLICK */
         document.addEventListener('click', function(e) {
             const custContainer = document.getElementById('cust-name')?.parentElement;
             if (custContainer && !custContainer.contains(e.target)) {
@@ -1094,10 +805,12 @@
             }
         });
 
+        /* CUSTOMER DATABASE & SEARCH AUTOCOMPLETE ENGINE */
         function getCustomersFromStore() {
             let customers = JSON.parse(localStorage.getItem('glamstitch_customers') || '[]');
             const history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
             
+            // Sync any existing customer history
             history.forEach(h => {
                 if (h.customerName && h.customerName !== 'Pelanggan Umum') {
                     const idx = customers.findIndex(c => c.name.toLowerCase() === h.customerName.toLowerCase());
@@ -1105,7 +818,6 @@
                         customers.push({
                             name: h.customerName,
                             phone: h.customerPhone && h.customerPhone !== '-' ? h.customerPhone : '',
-                            address: h.customerAddress && h.customerAddress !== '-' ? h.customerAddress : '',
                             orderCount: 1,
                             lastSeen: h.date || new Date().toISOString()
                         });
@@ -1122,9 +834,13 @@
             const badge = document.getElementById('cust-repeat-badge');
 
             const customers = getCustomersFromStore();
+
             const exactMatch = customers.find(c => c.name.toLowerCase() === query && query !== '');
-            if (exactMatch) badge.classList.remove('hidden');
-            else badge.classList.add('hidden');
+            if (exactMatch) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
 
             if (!query) {
                 dropdown.classList.add('hidden');
@@ -1143,7 +859,7 @@
             }
 
             dropdown.innerHTML = matches.map(c => `
-                <div onclick="selectCustomer('${c.name.replace(/'/g, "\\'")}', '${(c.phone || '').replace(/'/g, "\\'")}', '${String(c.address || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' ').replace(/"/g, '&quot;')}')" class="p-2.5 hover:bg-blue-50/80 cursor-pointer transition flex items-center justify-between text-xs">
+                <div onclick="selectCustomer('${c.name.replace(/'/g, "\\'")}', '${(c.phone || '').replace(/'/g, "\\'")}')" class="p-2.5 hover:bg-blue-50/80 cursor-pointer transition flex items-center justify-between text-xs">
                     <div>
                         <span class="font-bold text-slate-800 block">${c.name}</span>
                         <span class="text-[10px] text-slate-400"><i class="fa-solid fa-phone text-[9px] mr-1"></i>${c.phone || '-'}</span>
@@ -1155,26 +871,29 @@
             dropdown.classList.remove('hidden');
         }
 
-        function selectCustomer(name, phone, address) {
+        function selectCustomer(name, phone) {
             document.getElementById('cust-name').value = name;
             document.getElementById('cust-phone').value = (phone && phone !== '-') ? phone : '';
-            document.getElementById('cust-address').value = (address && address !== '-') ? address : '';
             document.getElementById('customer-suggestions').classList.add('hidden');
             document.getElementById('cust-repeat-badge').classList.remove('hidden');
         }
 
-        function saveCustomerToDatabase(name, phone, address) {
+        function saveCustomerToDatabase(name, phone) {
             if (!name || name === 'Pelanggan Umum') return;
             let customers = JSON.parse(localStorage.getItem('glamstitch_customers') || '[]');
             const idx = customers.findIndex(c => c.name.toLowerCase() === name.toLowerCase());
 
             if (idx >= 0) {
                 if (phone && phone !== '-') customers[idx].phone = phone;
-                if (address && address !== '-') customers[idx].address = address;
                 customers[idx].orderCount = (customers[idx].orderCount || 1) + 1;
                 customers[idx].lastSeen = new Date().toISOString();
             } else {
-                customers.push({ name: name, phone: (phone && phone !== '-') ? phone : '', address: (address && address !== '-') ? address : '', orderCount: 1, lastSeen: new Date().toISOString() });
+                customers.push({
+                    name: name,
+                    phone: (phone && phone !== '-') ? phone : '',
+                    orderCount: 1,
+                    lastSeen: new Date().toISOString()
+                });
             }
             localStorage.setItem('glamstitch_customers', JSON.stringify(customers));
         }
@@ -1184,27 +903,20 @@
             document.getElementById('cart-order-id').innerText = `ID: #ORD-${rand}`;
         }
 
-        function fitSidebarTagline() {
-            const el = document.getElementById('sidebar-brand-tagline');
-            if (!el) return;
-            el.style.fontSize = '';
-            el.title = el.innerText;
-            if (!el.clientWidth) return;
-            let size = parseFloat(getComputedStyle(el).fontSize) || 10;
-            while (el.scrollWidth > el.clientWidth && size > 5) {
-                size -= 0.5;
-                el.style.fontSize = size + 'px';
-            }
-        }
-        window.addEventListener('resize', fitSidebarTagline);
-        window.addEventListener('load', fitSidebarTagline);
-
+        /* 3. BRAND CONFIGURATION ENGINE */
         function applyBrandUI() {
             document.getElementById('sidebar-brand-name').innerText = brandConfig.name;
             document.getElementById('sidebar-brand-tagline').innerText = brandConfig.tagline;
-            fitSidebarTagline();
+
             document.querySelectorAll('.currency-label').forEach(el => el.innerText = brandConfig.currency);
 
+            if (brandConfig.logoUrl) {
+                document.getElementById('sidebar-logo-container').innerHTML = `<img src="${brandConfig.logoUrl}" class="w-full h-full object-cover">`;
+            } else {
+                document.getElementById('sidebar-logo-container').innerHTML = `<i class="fa-solid fa-shirt"></i>`;
+            }
+
+            // Sync Page Input Fields
             document.getElementById('cfg-brand-name').value = brandConfig.name;
             document.getElementById('cfg-brand-tagline').value = brandConfig.tagline;
             document.getElementById('cfg-currency').value = brandConfig.currency;
@@ -1212,16 +924,47 @@
             document.getElementById('cfg-address').value = brandConfig.address || '';
             document.getElementById('cfg-whatsapp').value = brandConfig.whatsapp || '';
             document.getElementById('cfg-instagram').value = brandConfig.instagram || '';
-            document.getElementById('cfg-bca').value = brandConfig.bcaAccount || '';
-            document.getElementById('cfg-mandiri').value = brandConfig.mandiriAccount || '';
-            document.getElementById('cfg-qris').value = brandConfig.qrisDetail || '';
+            document.getElementById('cfg-bca').value = brandConfig.bcaAccount || '123-456-7890 a/n Glamstitch';
+            document.getElementById('cfg-mandiri').value = brandConfig.mandiriAccount || '987-654-3210 a/n Glamstitch';
+            document.getElementById('cfg-qris').value = brandConfig.qrisDetail || 'Scan QR Kasir';
             document.getElementById('cfg-custom-notes').value = brandConfig.customNotes || '';
-            renderSidebarLogo(brandConfig.logoUrl);
+
+            // Update Payment Method Options dynamically
+            const bcaOpt = document.getElementById('opt-pay-bca');
+            const mandiriOpt = document.getElementById('opt-pay-mandiri');
+            const qrisOpt = document.getElementById('opt-pay-qris');
+
+            if (bcaOpt) {
+                const bcaVal = `Transfer Bank BCA (${brandConfig.bcaAccount || '123-456-7890 a/n Glamstitch'})`;
+                bcaOpt.value = bcaVal;
+                bcaOpt.innerText = `Transfer Bank BCA (${brandConfig.bcaAccount || '123-456-7890'})`;
+            }
+            if (mandiriOpt) {
+                const mandiriVal = `Transfer Bank Mandiri (${brandConfig.mandiriAccount || '987-654-3210 a/n Glamstitch'})`;
+                mandiriOpt.value = mandiriVal;
+                mandiriOpt.innerText = `Transfer Bank Mandiri (${brandConfig.mandiriAccount || '987-654-3210'})`;
+            }
+            if (qrisOpt) {
+                const qrisVal = `QRIS All Payment (${brandConfig.qrisDetail || 'Scan QR Kasir'})`;
+                qrisOpt.value = qrisVal;
+                qrisOpt.innerText = `QRIS All Payment (${brandConfig.qrisDetail || 'Scan QR'})`;
+            }
+        }
+
+        function previewLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('cfg-logo-url').value = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
         }
 
         function saveBrandSettings() {
             brandConfig.name = document.getElementById('cfg-brand-name').value || 'GLAMSTITCH';
-            brandConfig.tagline = document.getElementById('cfg-brand-tagline').value || 'POS Engine';
+            brandConfig.tagline = document.getElementById('cfg-brand-tagline').value || 'POS & Apparel Engine';
             brandConfig.currency = document.getElementById('cfg-currency').value || 'Rp';
             brandConfig.logoUrl = document.getElementById('cfg-logo-url').value;
             brandConfig.address = document.getElementById('cfg-address').value;
@@ -1234,30 +977,49 @@
 
             localStorage.setItem('glamstitch_brand_config', JSON.stringify(brandConfig));
             applyBrandUI();
-            syncToDropbox();
-            alert('Pengaturan identitas brand tersimpan & ter-sync!');
+            alert('Pengaturan identitas brand & info rekening pembayaran berhasil diperbarui!');
         }
 
+        function triggerFullWebReset() {
+            if (confirm('PERINGATAN! Tindakan ini akan MENGHAPUS SELURUH RIWAYAT NOTA, DATABASE KONSUMEN, TRANSAKSI, DAN PENGATURAN BRAND, mengembalikannya ke awal.\n\nApakah Anda yakin ingin melakukan Factory Reset Web?')) {
+                localStorage.removeItem('glamstitch_orders_history');
+                localStorage.removeItem('glamstitch_brand_config');
+                localStorage.removeItem('glamstitch_customers');
+                location.reload();
+            }
+        }
+
+        /* 4. CATALOG & POS RENDER ENGINE */
         function renderCatalog(cat = 'all') {
             const grid = document.getElementById('product-grid');
             grid.innerHTML = '';
+
             const filtered = cat === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.category === cat);
             document.getElementById('product-count').innerText = `${filtered.length} Paket Tersedia`;
 
             filtered.forEach(p => {
                 const card = document.createElement('div');
                 card.className = "bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-4 soft-shadow hover-lift flex flex-col justify-between transition relative";
-                const priceText = p.options.length === 1 ? `${brandConfig.currency} ${formatRupiah(p.options[0].price)}` : `From ${brandConfig.currency} ${formatRupiah(p.options[0].price)}`;
+
+                let priceText = '';
+                if (p.options.length === 1) {
+                    priceText = `${brandConfig.currency} ${formatRupiah(p.options[0].price)}`;
+                } else {
+                    priceText = `From ${brandConfig.currency} ${formatRupiah(p.options[0].price)}`;
+                }
 
                 card.innerHTML = `
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${p.minQty > 1 ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">${p.minQty > 1 ? `Min ${p.minQty} Pcs` : 'Satuan'}</span>
+                            <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${p.minQty > 1 ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">
+                                ${p.minQty > 1 ? `Min ${p.minQty} Pcs` : 'Satuan / Tim'}
+                            </span>
                             <span class="text-xs sm:text-sm font-black text-blue-600 mono">${priceText}</span>
                         </div>
-                        <h3 class="font-extrabold text-slate-800 text-xs sm:text-sm mb-1">${p.name}</h3>
-                        <p class="text-[11px] sm:text-xs text-slate-500 mb-3 sm:mb-4">${p.desc}</p>
+                        <h3 class="font-extrabold text-slate-800 text-xs sm:text-sm leading-snug mb-1">${p.name}</h3>
+                        <p class="text-[11px] sm:text-xs text-slate-500 leading-relaxed mb-3 sm:mb-4">${p.desc}</p>
                     </div>
+
                     <button onclick="openAddonModal(${p.id})" class="w-full py-2 bg-slate-900 hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-plus text-[10px]"></i> Konfigurasi Paket
                     </button>
@@ -1269,9 +1031,15 @@
         function filterProducts() {
             const query = document.getElementById('search-input').value.toLowerCase();
             const cards = document.getElementById('product-grid').children;
+
             Array.from(cards).forEach(card => {
                 const title = card.querySelector('h3').innerText.toLowerCase();
-                card.style.display = title.includes(query) ? 'flex' : 'none';
+                const desc = card.querySelector('p').innerText.toLowerCase();
+                if (title.includes(query) || desc.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
             });
         }
 
@@ -1283,13 +1051,15 @@
             renderCatalog(cat);
         }
 
+        /* 5. ADD-ON MODAL & DTF OVERRIDE LOGIC */
         function openAddonModal(productId) {
             selectedProductForModal = PRODUCTS.find(p => p.id === productId);
             if (!selectedProductForModal) return;
 
             document.getElementById('modal-product-title').innerText = selectedProductForModal.name;
-            document.getElementById('modal-min-qty-label').innerText = `Minimal pemesanan: ${selectedProductForModal.minQty} Pcs`;
+            document.getElementById('modal-min-qty-label').innerText = `Minimal pemesanan untuk paket ini: ${selectedProductForModal.minQty} Pcs`;
 
+            // Setup Options Radio Group
             const typeGroup = document.getElementById('type-radio-group');
             typeGroup.innerHTML = '';
             selectedProductForModal.options.forEach((opt, idx) => {
@@ -1305,17 +1075,70 @@
                 typeGroup.appendChild(label);
             });
 
+            // Set minimum Qty
             document.getElementById('modal-qty').value = selectedProductForModal.minQty;
+
+            // Reset inputs
+            document.getElementById('addon-collar').value = "0";
+            document.getElementById('add-longsleeve').checked = false;
+            document.getElementById('add-hoodie').checked = false;
+            document.getElementById('add-fabric-2').checked = false;
+            document.getElementById('add-fabric-3').checked = false;
+            document.getElementById('add-raglan').checked = false;
+            document.getElementById('add-oversize').checked = false;
+            document.getElementById('add-dtf-pkg').checked = false;
+            document.getElementById('addon-upsize').value = "0";
+            document.getElementById('addon-logo').value = "0";
+
             calculateModalPrice();
             document.getElementById('modal-addon').classList.remove('hidden');
         }
 
-        function closeAddonModal() { document.getElementById('modal-addon').classList.add('hidden'); }
+        function closeAddonModal() {
+            document.getElementById('modal-addon').classList.add('hidden');
+        }
+
+        function changeModalQty(delta) {
+            const input = document.getElementById('modal-qty');
+            let val = parseInt(input.value) || selectedProductForModal.minQty;
+            val += delta;
+            if (val < selectedProductForModal.minQty) val = selectedProductForModal.minQty;
+            input.value = val;
+            calculateModalPrice();
+        }
+
+        function validateModalQty() {
+            const input = document.getElementById('modal-qty');
+            let val = parseInt(input.value) || selectedProductForModal.minQty;
+            if (val < selectedProductForModal.minQty) {
+                alert(`Minimal pemesanan untuk paket ini adalah ${selectedProductForModal.minQty} Pcs.`);
+                val = selectedProductForModal.minQty;
+            }
+            input.value = val;
+            calculateModalPrice();
+        }
 
         function calculateModalPrice() {
             if (!selectedProductForModal) return;
+
             const selectedRadio = document.querySelector('input[name="apparel-opt"]:checked');
             const basePrice = selectedRadio ? parseInt(selectedRadio.value) : selectedProductForModal.options[0].price;
+
+            const isDtfPackageChecked = document.getElementById('add-dtf-pkg').checked;
+            const logoSelect = document.getElementById('addon-logo');
+            const dtfOption = document.getElementById('opt-logo-dtf');
+            const overrideBadge = document.getElementById('dtf-override-badge');
+
+            /* OVERRIDE LOGIC FOR DTF PACKAGE VS DTF LOGO */
+            if (isDtfPackageChecked) {
+                dtfOption.value = "0";
+                dtfOption.innerText = "DTF Logo (INCLUDED / TERMASUK DTF PACKAGE)";
+                overrideBadge.classList.remove('hidden');
+            } else {
+                dtfOption.value = "5000";
+                dtfOption.innerText = "DTF Logo (+5.000)";
+                overrideBadge.classList.add('hidden');
+            }
 
             let addonsSum = 0;
             addonsSum += parseInt(document.getElementById('addon-collar').value) || 0;
@@ -1325,9 +1148,9 @@
             if (document.getElementById('add-fabric-3').checked) addonsSum += 30000;
             if (document.getElementById('add-raglan').checked) addonsSum += 20000;
             if (document.getElementById('add-oversize').checked) addonsSum += 25000;
-            if (document.getElementById('add-dtf-pkg').checked) addonsSum += 35000;
+            if (isDtfPackageChecked) addonsSum += 35000;
             addonsSum += parseInt(document.getElementById('addon-upsize').value) || 0;
-            addonsSum += effectiveLogoPrice();
+            addonsSum += parseInt(logoSelect.value) || 0;
 
             const unitPrice = basePrice + addonsSum;
             document.getElementById('modal-calculated-price').innerText = `${brandConfig.currency} ${formatRupiah(unitPrice)}`;
@@ -1342,88 +1165,151 @@
             let addOnsList = [];
             let addonsPriceSum = 0;
 
+            // Collar
             const collarEl = document.getElementById('addon-collar');
             if (parseInt(collarEl.value) > 0) {
-                addOnsList.push(collarEl.options[collarEl.selectedIndex].getAttribute('data-name'));
+                const optName = collarEl.options[collarEl.selectedIndex].getAttribute('data-name');
+                addOnsList.push(`${optName}`);
                 addonsPriceSum += parseInt(collarEl.value);
             }
 
+            // Checkboxes
             if (document.getElementById('add-longsleeve').checked) { addOnsList.push('Lngn Panjang Karet (+25rb)'); addonsPriceSum += 25000; }
             if (document.getElementById('add-hoodie').checked) { addOnsList.push('Kupluk / Hoodie (+15rb)'); addonsPriceSum += 15000; }
-            if (document.getElementById('add-fabric-2').checked) { addOnsList.push('Bahan Lv.2 (+20rb)'); addonsPriceSum += 20000; }
-            if (document.getElementById('add-fabric-3').checked) { addOnsList.push('Bahan Lv.3 (+30rb)'); addonsPriceSum += 30000; }
+            if (document.getElementById('add-fabric-2').checked) { addOnsList.push('Bahan Lv.2 Embosh/Airwalk (+20rb)'); addonsPriceSum += 20000; }
+            if (document.getElementById('add-fabric-3').checked) { addOnsList.push('Bahan Lv.3 Milano UV (+30rb)'); addonsPriceSum += 30000; }
             if (document.getElementById('add-raglan').checked) { addOnsList.push('Pola Raglan (+20rb)'); addonsPriceSum += 20000; }
             if (document.getElementById('add-oversize').checked) { addOnsList.push('Pola Oversize (+25rb)'); addonsPriceSum += 25000; }
-            if (document.getElementById('add-dtf-pkg').checked) { addOnsList.push('DTF Package Complete (+35rb)'); addonsPriceSum += 35000; }
 
+            const isDtfPkg = document.getElementById('add-dtf-pkg').checked;
+            if (isDtfPkg) { addOnsList.push('DTF Package Complete (+35rb)'); addonsPriceSum += 35000; }
+
+            // Up size
             const upsizeEl = document.getElementById('addon-upsize');
             if (parseInt(upsizeEl.value) > 0) {
-                addOnsList.push(upsizeEl.options[upsizeEl.selectedIndex].getAttribute('data-name'));
+                const name = upsizeEl.options[upsizeEl.selectedIndex].getAttribute('data-name');
+                addOnsList.push(`${name}`);
                 addonsPriceSum += parseInt(upsizeEl.value);
             }
 
+            // Logo
             const logoEl = document.getElementById('addon-logo');
-            const logoName = logoEl.options[logoEl.selectedIndex].getAttribute('data-name');
-            if (/Tatami|TPU/.test(logoName) && qty < 12) { alert('Logo 3D Tatami / TPU minimal 12 Pcs.'); return; }
-            const logoPrice = effectiveLogoPrice();
-            if (parseInt(logoEl.value) > 0) {
-                addOnsList.push(`Logo: ${logoName}${logoPrice === 0 ? ' (termasuk paket DTF)' : ''}`);
-                addonsPriceSum += logoPrice;
+            if (logoEl.value !== "0" || isDtfPkg) {
+                const logoName = logoEl.options[logoEl.selectedIndex].getAttribute('data-name');
+                if (isDtfPkg && logoEl.value === "0" && logoName === "DTF Logo") {
+                    addOnsList.push(`Logo: DTF Logo (Termasuk DTF Package)`);
+                } else if (parseInt(logoEl.value) > 0) {
+                    addOnsList.push(`Logo: ${logoName}`);
+                    addonsPriceSum += parseInt(logoEl.value);
+                }
             }
 
             const unitPrice = basePrice + addonsPriceSum;
-            cart.push({
+
+            const cartItem = {
                 id: Date.now(),
+                productId: selectedProductForModal.id,
                 name: `${selectedProductForModal.name} (${optionName})`,
                 qty: qty,
                 unitPrice: unitPrice,
                 subtotal: unitPrice * qty,
                 details: addOnsList
-            });
+            };
 
+            cart.push(cartItem);
             renderCart();
             closeAddonModal();
         }
 
+        /* 6. CART MANAGEMENT & TOTAL CALCULATIONS */
         function renderCart() {
             const container = document.getElementById('cart-items-container');
             container.innerHTML = '';
 
             if (cart.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs">Keranjang Kosong</div>`;
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-center text-slate-400 p-6 space-y-2">
+                        <i class="fa-solid fa-basket-shopping text-3xl text-slate-300"></i>
+                        <p class="text-xs font-semibold">Keranjang Masih Kosong</p>
+                        <p class="text-[11px] text-slate-400">Pilih paket apparel dari katalog untuk memulai pesanan.</p>
+                    </div>
+                `;
                 calculateCartTotals();
                 return;
             }
 
             cart.forEach((item, index) => {
                 const el = document.createElement('div');
-                el.className = "bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs space-y-1";
+                el.className = "bg-slate-50 border border-slate-200 rounded-xl p-2.5 sm:p-3 space-y-1.5 text-xs hover:border-blue-300 transition";
+
+                let detailsHtml = '';
+                if (item.details && item.details.length > 0) {
+                    detailsHtml = `
+                        <div class="text-[10px] text-slate-500 bg-white p-2 rounded-lg border border-slate-100 space-y-0.5 mt-1">
+                            ${item.details.map(d => `<div>• ${d}</div>`).join('')}
+                        </div>
+                    `;
+                }
+
                 el.innerHTML = `
-                    <div class="flex justify-between font-bold text-slate-800">
-                        <span>${item.name}</span>
-                        <button onclick="removeCartItem(${index})" class="text-rose-500"><i class="fa-solid fa-trash"></i></button>
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <span class="font-bold text-slate-800 block leading-tight text-xs">${item.name}</span>
+                            <span class="text-[10px] sm:text-[11px] text-blue-600 font-semibold mono">${brandConfig.currency} ${formatRupiah(item.unitPrice)} / pcs</span>
+                        </div>
+                        <button onclick="removeCartItem(${index})" class="text-slate-400 hover:text-rose-500 p-1">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
                     </div>
-                    <div class="flex justify-between text-slate-500">
-                        <span>${item.qty} x ${formatRupiah(item.unitPrice)}</span>
-                        <span class="mono font-bold">${formatRupiah(item.subtotal)}</span>
+                    ${detailsHtml}
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                        <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-md px-1 py-0.5">
+                            <button onclick="updateCartQty(${index}, -1)" class="w-5 h-5 bg-slate-100 hover:bg-slate-200 font-bold rounded text-[10px] flex items-center justify-center text-slate-700">-</button>
+                            <span class="w-6 text-center font-bold mono text-[11px]">${item.qty}</span>
+                            <button onclick="updateCartQty(${index}, 1)" class="w-5 h-5 bg-slate-100 hover:bg-slate-200 font-bold rounded text-[10px] flex items-center justify-center text-slate-700">+</button>
+                        </div>
+                        <span class="mono font-extrabold text-slate-900 text-xs">${brandConfig.currency} ${formatRupiah(item.subtotal)}</span>
                     </div>
                 `;
                 container.appendChild(el);
             });
+
             calculateCartTotals();
         }
 
-        function removeCartItem(index) { cart.splice(index, 1); renderCart(); }
-        function clearCart() { cart = []; renderCart(); }
+        function updateCartQty(index, delta) {
+            cart[index].qty += delta;
+            if (cart[index].qty <= 0) {
+                cart.splice(index, 1);
+            } else {
+                cart[index].subtotal = cart[index].unitPrice * cart[index].qty;
+            }
+            renderCart();
+        }
+
+        function removeCartItem(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function clearCart() {
+            if (cart.length === 0) return;
+            if (confirm('Kosongkan keranjang belanja saat ini?')) {
+                cart = [];
+                renderCart();
+            }
+        }
 
         function calculateCartTotals() {
             const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
             const discount = parseInt(document.getElementById('summary-discount').value) || 0;
             const dp = parseInt(document.getElementById('summary-dp').value) || 0;
-            const remaining = Math.max(0, (subtotal - discount) - dp);
+
+            const grandTotal = Math.max(0, subtotal - discount);
+            const remainingBalance = Math.max(0, grandTotal - dp);
 
             document.getElementById('summary-subtotal').innerText = `${brandConfig.currency} ${formatRupiah(subtotal)}`;
-            document.getElementById('summary-balance').innerText = `${brandConfig.currency} ${formatRupiah(remaining)}`;
+            document.getElementById('summary-balance').innerText = `${brandConfig.currency} ${formatRupiah(remainingBalance)}`;
         }
 
         function toggleCustomPaymentInput() {
@@ -1437,35 +1323,37 @@
             }
         }
 
+        /* 7. CHECKOUT & DOCUMENT GENERATION */
         function processCheckout() {
-            if (cart.length === 0) { alert("Keranjang kosong!"); return; }
+            if (cart.length === 0) {
+                alert('Keranjang belanja masih kosong! Silahkan tambah paket apparel terlebih dahulu.');
+                return;
+            }
 
             const custName = document.getElementById('cust-name').value.trim() || 'Pelanggan Umum';
             const custPhone = document.getElementById('cust-phone').value.trim() || '-';
-            const custAddress = document.getElementById('cust-address').value.trim() || '-';
             const payStatus = document.getElementById('payment-status').value;
-            
-            saveCustomerToDatabase(custName, custPhone, custAddress);
+
+            // Save Customer Record to Database
+            saveCustomerToDatabase(custName, custPhone);
 
             const paySelect = document.getElementById('payment-method');
             let payDetail = paySelect.value;
             if (payDetail === 'custom') {
-                payDetail = document.getElementById('custom-payment-detail').value.trim() || 'Manual Payment';
+                payDetail = document.getElementById('custom-payment-detail').value.trim() || 'Manual Custom Payment';
             }
 
             const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
             const discount = parseInt(document.getElementById('summary-discount').value) || 0;
-            let dpAmount = parseInt(document.getElementById('summary-dp').value) || 0;
-            if (payStatus === 'Lunas') dpAmount = Math.max(0, subtotal - discount);
+            const dpAmount = parseInt(document.getElementById('summary-dp').value) || 0;
             const orderId = document.getElementById('cart-order-id').innerText.replace('ID: #', '');
 
             previewOrderStore = {
                 orderId: orderId,
-                date: new Date().toLocaleDateString('id-ID'),
+                date: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
                 timestamp: Date.now(),
                 customerName: custName,
                 customerPhone: custPhone,
-                customerAddress: custAddress,
                 paymentStatus: payStatus,
                 paymentMethodDetail: payDetail,
                 items: [...cart],
@@ -1475,14 +1363,17 @@
                 notes: brandConfig.customNotes
             };
 
+            // Save order to history
             saveOrderToHistory(previewOrderStore);
+
+            // Open Preview Modal
             renderDocumentPreview();
             document.getElementById('modal-invoice').classList.remove('hidden');
 
+            // AUTO-RESET CART & INPUT FORM FOR NEXT TRANSACTION
             cart = [];
             document.getElementById('cust-name').value = '';
             document.getElementById('cust-phone').value = '';
-            document.getElementById('cust-address').value = '';
             document.getElementById('summary-discount').value = '0';
             document.getElementById('summary-dp').value = '0';
             document.getElementById('cust-repeat-badge').classList.add('hidden');
@@ -1490,113 +1381,688 @@
             renderCart();
         }
 
+        function setDocumentMode(mode) {
+            documentMode = mode;
+            const btnInv = document.getElementById('btn-mode-invoice');
+            const btnRec = document.getElementById('btn-mode-receipt');
+
+            if (mode === 'invoice') {
+                btnInv.className = "px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition";
+                btnRec.className = "px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition";
+            } else {
+                btnRec.className = "px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition";
+                btnInv.className = "px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition";
+            }
+            renderDocumentPreview();
+        }
+
+        function renderDocumentPreview() {
+            const printArea = document.getElementById('print-area');
+            if (!previewOrderStore) return;
+
+            const o = previewOrderStore;
+            const grandTotal = o.subtotal - o.discount;
+            const remaining = Math.max(0, grandTotal - o.dpAmount);
+
+            if (documentMode === 'invoice') {
+                printArea.className = "bg-white text-slate-800 p-4 sm:p-8 rounded-xl transition-all w-full max-w-2xl min-h-[500px] border border-slate-200 flex flex-col justify-between overflow-x-auto";
+                printArea.innerHTML = `
+                    <div class="space-y-4 sm:space-y-6">
+                        <!-- Header -->
+                        <div class="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-4 sm:pb-6 gap-3">
+                            <div>
+                                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">${brandConfig.name}</h1>
+                                <p class="text-[11px] sm:text-xs text-blue-600 font-bold uppercase tracking-wider">${brandConfig.tagline}</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500 mt-1 sm:mt-2 max-w-xs leading-relaxed">${brandConfig.address}</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500">WA: ${brandConfig.whatsapp} | IG: ${brandConfig.instagram}</p>
+                            </div>
+                            <div class="sm:text-right">
+                                <span class="inline-block px-2.5 py-0.5 bg-slate-900 text-white text-[10px] sm:text-xs font-bold uppercase tracking-widest rounded-lg mb-1 sm:mb-2">INVOICE</span>
+                                <p class="text-xs sm:text-sm font-bold text-slate-800 mono">#${o.orderId}</p>
+                                <p class="text-[11px] sm:text-xs text-slate-500">${o.date}</p>
+                            </div>
+                        </div>
+
+                        <!-- Customer & Payment Metadata -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200/80 text-xs">
+                            <div>
+                                <span class="text-slate-400 uppercase font-bold text-[10px] block">Diterbitkan Untuk:</span>
+                                <p class="font-bold text-slate-800 text-xs sm:text-sm">${o.customerName}</p>
+                                <p class="text-slate-500">No. Telp: ${o.customerPhone}</p>
+                            </div>
+                            <div class="sm:text-right">
+                                <span class="text-slate-400 uppercase font-bold text-[10px] block">Info Pembayaran:</span>
+                                <p class="font-bold text-slate-800">${o.paymentMethodDetail}</p>
+                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-extrabold uppercase mt-1 ${o.paymentStatus === 'Lunas' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                                    Status: ${o.paymentStatus}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Items Table -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs min-w-[320px]">
+                                <thead>
+                                    <tr class="border-b-2 border-slate-200 text-slate-400 font-bold uppercase text-[10px]">
+                                        <th class="py-2">Deskripsi Apparel</th>
+                                        <th class="py-2 text-center">Qty</th>
+                                        <th class="py-2 text-right">Harga Unit</th>
+                                        <th class="py-2 text-right">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${o.items.map(item => `
+                                        <tr>
+                                            <td class="py-2.5">
+                                                <p class="font-bold text-slate-800">${item.name}</p>
+                                                ${item.details.length > 0 ? `<p class="text-[10px] text-slate-500">${item.details.join(', ')}</p>` : ''}
+                                            </td>
+                                            <td class="py-2.5 text-center font-bold mono">${item.qty}</td>
+                                            <td class="py-2.5 text-right mono">${brandConfig.currency} ${formatRupiah(item.unitPrice)}</td>
+                                            <td class="py-2.5 text-right font-bold mono">${brandConfig.currency} ${formatRupiah(item.subtotal)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Totals Summary -->
+                        <div class="border-t border-slate-200 pt-3 sm:pt-4 flex justify-end">
+                            <div class="w-full sm:w-64 space-y-1.5 text-xs">
+                                <div class="flex justify-between text-slate-500">
+                                    <span>Subtotal</span>
+                                    <span class="mono font-bold">${brandConfig.currency} ${formatRupiah(o.subtotal)}</span>
+                                </div>
+                                <div class="flex justify-between text-slate-500">
+                                    <span>Diskon</span>
+                                    <span class="mono font-bold text-rose-500">-${brandConfig.currency} ${formatRupiah(o.discount)}</span>
+                                </div>
+                                <div class="flex justify-between text-slate-500">
+                                    <span>Nominal DP Paid</span>
+                                    <span class="mono font-bold text-emerald-600">${brandConfig.currency} ${formatRupiah(o.dpAmount)}</span>
+                                </div>
+                                <div class="border-t border-slate-200 pt-2 flex justify-between font-black text-xs sm:text-sm text-slate-900">
+                                    <span>Sisa Tagihan</span>
+                                    <span class="mono text-blue-600">${brandConfig.currency} ${formatRupiah(remaining)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LOCKED PRODUCTION TEAM NOTES -->
+                        ${o.notes ? `
+                            <div class="bg-amber-50/60 border border-amber-200/80 rounded-xl p-2.5 sm:p-3 text-xs text-slate-700 space-y-1">
+                                <span class="font-bold text-amber-900 uppercase text-[10px] tracking-wider block flex items-center gap-1">
+                                    <i class="fa-solid fa-lock text-[10px]"></i> Catatan Produksi & Syarat Garansi
+                                </span>
+                                <p class="whitespace-pre-line text-[10px] sm:text-[11px] leading-relaxed">${o.notes}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Footer Barcode & QR -->
+                    <div class="border-t border-slate-200 pt-4 sm:pt-6 flex items-center justify-between gap-2 mt-4">
+                        <div class="text-center">
+                            <svg id="invoice-barcode" class="h-8 sm:h-10 max-w-[120px] sm:max-w-none"></svg>
+                        </div>
+                        <div class="text-right">
+                            <div id="invoice-qrcode" class="inline-block p-1 bg-white border border-slate-200 rounded-lg"></div>
+                        </div>
+                    </div>
+                `;
+
+                setTimeout(() => {
+                    JsBarcode("#invoice-barcode", o.orderId, { format: "CODE128", height: 35, displayValue: false });
+                    document.getElementById('invoice-qrcode').innerHTML = '';
+                    new QRCode(document.getElementById("invoice-qrcode"), { text: `ORD-${o.orderId}`, width: 45, height: 45 });
+                }, 50);
+
+            } else {
+                // THERMAL RECEIPT MODE (80mm)
+                printArea.className = "bg-white text-slate-900 p-3.5 sm:p-4 rounded-xl transition-all w-full sm:w-80 max-w-xs min-h-[450px] border border-slate-200 font-mono text-xs flex flex-col justify-between mx-auto";
+                printArea.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="text-center border-b border-dashed border-slate-400 pb-2.5">
+                            <h2 class="font-black text-sm sm:text-base">${brandConfig.name}</h2>
+                            <p class="text-[10px] text-slate-600">${brandConfig.tagline}</p>
+                            <p class="text-[10px] text-slate-500 mt-0.5">${brandConfig.address}</p>
+                        </div>
+
+                        <div class="text-[10px] space-y-0.5 border-b border-dashed border-slate-400 pb-2">
+                            <div class="flex justify-between"><span>Nota:</span><span class="font-bold">#${o.orderId}</span></div>
+                            <div class="flex justify-between"><span>Tgl:</span><span>${o.date}</span></div>
+                            <div class="flex justify-between"><span>Pemesan:</span><span class="font-bold">${o.customerName}</span></div>
+                            <div class="flex justify-between"><span>Status:</span><span class="font-bold">${o.paymentStatus}</span></div>
+                        </div>
+
+                        <div class="space-y-2 border-b border-dashed border-slate-400 pb-2.5 text-[11px]">
+                            ${o.items.map(item => `
+                                <div>
+                                    <div class="flex justify-between font-bold">
+                                        <span>${item.name}</span>
+                                    </div>
+                                    <div class="flex justify-between text-[10px] text-slate-600">
+                                        <span>${item.qty} x ${formatRupiah(item.unitPrice)}</span>
+                                        <span>${formatRupiah(item.subtotal)}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="space-y-1 text-[11px] border-b border-dashed border-slate-400 pb-2">
+                            <div class="flex justify-between"><span>Subtotal:</span><span>${formatRupiah(o.subtotal)}</span></div>
+                            <div class="flex justify-between"><span>Diskon:</span><span>-${formatRupiah(o.discount)}</span></div>
+                            <div class="flex justify-between"><span>DP Paid:</span><span>${formatRupiah(o.dpAmount)}</span></div>
+                            <div class="flex justify-between font-black text-xs pt-1 border-t border-slate-300">
+                                <span>SISA:</span><span>${brandConfig.currency} ${formatRupiah(remaining)}</span>
+                            </div>
+                        </div>
+
+                        ${o.notes ? `
+                            <div class="text-[9px] border-b border-dashed border-slate-400 pb-2 leading-tight">
+                                <span class="font-bold block uppercase mb-0.5">• Catatan Tim:</span>
+                                <p class="whitespace-pre-line">${o.notes}</p>
+                            </div>
+                        ` : ''}
+
+                        <div class="text-center text-[10px] pt-1.5 space-y-0.5">
+                            <p class="font-bold">Terima Kasih Atas Kepercayaan Anda!</p>
+                            <p class="text-[9px] text-slate-500">Simpan nota ini untuk bukti pengambilan.</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function closeInvoiceModal() {
+            document.getElementById('modal-invoice').classList.add('hidden');
+        }
+
+        function triggerPrint() {
+            window.print();
+        }
+
+        /* 8. EXECUTIVE SALES REPORTING MODULE */
+        let currentReportPeriod = 'today';
+        let activeReportData = [];
+
+        function openReportModal() {
+            document.getElementById('modal-report').classList.remove('hidden');
+            filterReportPeriod('today');
+        }
+
+        function closeReportModal() {
+            document.getElementById('modal-report').classList.add('hidden');
+        }
+
+        function filterReportPeriod(period) {
+            currentReportPeriod = period;
+            document.querySelectorAll('.rep-period-btn').forEach(btn => {
+                btn.className = "rep-period-btn px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap";
+            });
+
+            const activeBtn = document.getElementById(`btn-rep-${period}`);
+            if (activeBtn) activeBtn.className = "rep-period-btn px-2.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition whitespace-nowrap";
+
+            renderReportView();
+        }
+
+        function getFilteredOrders(period) {
+            const history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
+            const now = new Date();
+
+            return history.filter(h => {
+                const itemDate = new Date(h.timestamp || h.date);
+                const isInvalidDate = isNaN(itemDate.getTime());
+
+                if (period === 'all' || isInvalidDate) return true;
+
+                if (period === 'today') {
+                    return itemDate.getDate() === now.getDate() &&
+                           itemDate.getMonth() === now.getMonth() &&
+                           itemDate.getFullYear() === now.getFullYear();
+                } else if (period === 'week') {
+                    const diffDays = (now - itemDate) / (1000 * 3600 * 24);
+                    return diffDays >= 0 && diffDays <= 7;
+                } else if (period === 'month') {
+                    return itemDate.getMonth() === now.getMonth() &&
+                           itemDate.getFullYear() === now.getFullYear();
+                } else if (period === 'year') {
+                    return itemDate.getFullYear() === now.getFullYear();
+                }
+                return true;
+            });
+        }
+
+        function renderReportView() {
+            const container = document.getElementById('report-modal-content');
+            activeReportData = getFilteredOrders(currentReportPeriod);
+
+            let totalGross = 0;
+            let totalDiscount = 0;
+            let totalNet = 0;
+            let totalPaid = 0;
+            let totalOutstanding = 0;
+            let totalPcs = 0;
+            const productSalesMap = {};
+
+            activeReportData.forEach(ord => {
+                const subtotal = ord.items.reduce((s, i) => s + i.subtotal, 0);
+                const discount = ord.discount || 0;
+                const net = subtotal - discount;
+                const dp = ord.dpAmount || 0;
+                const remaining = Math.max(0, net - dp);
+
+                totalGross += subtotal;
+                totalDiscount += discount;
+                totalNet += net;
+                totalPaid += (ord.paymentStatus === 'Lunas' ? net : dp);
+                totalOutstanding += remaining;
+
+                ord.items.forEach(item => {
+                    totalPcs += (item.qty || 0);
+                    productSalesMap[item.name] = (productSalesMap[item.name] || 0) + item.qty;
+                });
+            });
+
+            const topProducts = Object.entries(productSalesMap)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            let periodLabel = 'Hari Ini';
+            if (currentReportPeriod === 'week') periodLabel = '7 Hari Terakhir';
+            if (currentReportPeriod === 'month') periodLabel = 'Bulan Ini';
+            if (currentReportPeriod === 'year') periodLabel = 'Tahun Ini';
+            if (currentReportPeriod === 'all') periodLabel = 'Keseluruhan Rekap';
+
+            container.innerHTML = `
+                <!-- Presentation Header Banner -->
+                <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 sm:p-6 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                    <div>
+                        <span class="text-[9px] sm:text-[10px] uppercase font-extrabold tracking-widest text-emerald-400 bg-emerald-950/80 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-emerald-800/50">Sales Executive Brief</span>
+                        <h2 class="text-base sm:text-xl font-black mt-1.5 text-white tracking-tight">${brandConfig.name} — Laporan ${periodLabel}</h2>
+                        <p class="text-[10px] sm:text-xs text-slate-300 mt-0.5">Dicetak pada: ${new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                    <div class="sm:text-right">
+                        <span class="text-[10px] sm:text-xs text-slate-400 block font-medium">Total Volume Pesanan</span>
+                        <span class="text-lg sm:text-2xl font-black text-white mono">${activeReportData.length} <span class="text-xs sm:text-sm font-normal text-slate-300">Nota</span></span>
+                    </div>
+                </div>
+
+                <!-- Executive Summary Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+                    <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 soft-shadow">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Total Omset Net</span>
+                        <p class="text-base sm:text-lg font-black text-slate-900 mono">${brandConfig.currency} ${formatRupiah(totalNet)}</p>
+                        <span class="text-[10px] text-slate-400">Gross: ${brandConfig.currency} ${formatRupiah(totalGross)}</span>
+                    </div>
+
+                    <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 soft-shadow">
+                        <span class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider block mb-1">Total Uang Masuk</span>
+                        <p class="text-base sm:text-lg font-black text-emerald-600 mono">${brandConfig.currency} ${formatRupiah(totalPaid)}</p>
+                        <span class="text-[10px] text-emerald-600 font-semibold">DP + Pelunasan</span>
+                    </div>
+
+                    <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 soft-shadow">
+                        <span class="text-[10px] font-extrabold text-amber-600 uppercase tracking-wider block mb-1">Sisa Piutang / Outstanding</span>
+                        <p class="text-base sm:text-lg font-black text-amber-600 mono">${brandConfig.currency} ${formatRupiah(totalOutstanding)}</p>
+                        <span class="text-[10px] text-amber-600 font-semibold">Belum Lunas</span>
+                    </div>
+
+                    <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 soft-shadow">
+                        <span class="text-[10px] font-extrabold text-blue-600 uppercase tracking-wider block mb-1">Total Apparel Terjual</span>
+                        <p class="text-base sm:text-lg font-black text-blue-600 mono">${totalPcs} <span class="text-xs font-bold text-slate-500">Pcs</span></p>
+                        <span class="text-[10px] text-slate-400">Volume Produksi</span>
+                    </div>
+                </div>
+
+                <!-- Top Products Matrix & Summary -->
+                ${topProducts.length > 0 ? `
+                    <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 soft-shadow space-y-3">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700">Top 5 Produk / Paket Apparel Terlaris</h4>
+                        <div class="space-y-2">
+                            ${topProducts.map(([pName, qty]) => {
+                                const percent = Math.round((qty / (totalPcs || 1)) * 100);
+                                return `
+                                    <div class="space-y-1 text-xs">
+                                        <div class="flex justify-between font-semibold text-slate-800">
+                                            <span>${pName}</span>
+                                            <span class="mono">${qty} Pcs (${percent}%)</span>
+                                        </div>
+                                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                            <div class="bg-blue-600 h-full rounded-full" style="width: ${percent}%"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <!-- Transactions Table -->
+                <div class="bg-white rounded-2xl border border-slate-200 soft-shadow overflow-hidden">
+                    <div class="px-4 sm:px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-slate-700">Detail Transaksi Periode (${activeReportData.length} Order)</h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs min-w-[500px]">
+                            <thead class="bg-slate-100 text-slate-600 font-bold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-2.5 sm:p-3">ID Nota</th>
+                                    <th class="p-2.5 sm:p-3">Tanggal</th>
+                                    <th class="p-2.5 sm:p-3">Pemesan / Tim</th>
+                                    <th class="p-2.5 sm:p-3">Status</th>
+                                    <th class="p-2.5 sm:p-3 text-right">Total Net</th>
+                                    <th class="p-2.5 sm:p-3 text-right">Paid (DP/Cash)</th>
+                                    <th class="p-2.5 sm:p-3 text-right">Sisa</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                ${activeReportData.length === 0 ? `
+                                    <tr>
+                                        <td colspan="7" class="p-6 text-center text-slate-400">Tidak ada transaksi pada periode ini.</td>
+                                    </tr>
+                                ` : activeReportData.map(ord => {
+                                    const subtotal = ord.items.reduce((s, i) => s + i.subtotal, 0);
+                                    const net = subtotal - (ord.discount || 0);
+                                    const dp = ord.dpAmount || 0;
+                                    const remaining = Math.max(0, net - dp);
+                                    return `
+                                        <tr class="hover:bg-slate-50 transition">
+                                            <td class="p-2.5 sm:p-3 font-bold mono text-slate-800">#${ord.orderId}</td>
+                                            <td class="p-2.5 sm:p-3 text-slate-500 text-[11px]">${ord.date}</td>
+                                            <td class="p-2.5 sm:p-3 font-bold text-slate-800">${ord.customerName}</td>
+                                            <td class="p-2.5 sm:p-3">
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${ord.paymentStatus === 'Lunas' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                                                    ${ord.paymentStatus}
+                                                </span>
+                                            </td>
+                                            <td class="p-2.5 sm:p-3 text-right mono font-bold text-slate-800">${brandConfig.currency} ${formatRupiah(net)}</td>
+                                            <td class="p-2.5 sm:p-3 text-right mono text-emerald-600">${brandConfig.currency} ${formatRupiah(dp)}</td>
+                                            <td class="p-2.5 sm:p-3 text-right mono font-bold text-amber-600">${brandConfig.currency} ${formatRupiah(remaining)}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function exportReportXLSX() {
+            if (!activeReportData || activeReportData.length === 0) {
+                alert('Tidak ada data laporan untuk diexport.');
+                return;
+            }
+
+            let totalGross = 0;
+            let totalDiscount = 0;
+            let totalNet = 0;
+            let totalPaid = 0;
+            let totalOutstanding = 0;
+            let totalPcs = 0;
+            const productSalesMap = {};
+
+            activeReportData.forEach(ord => {
+                const subtotal = ord.items.reduce((s, i) => s + i.subtotal, 0);
+                const discount = ord.discount || 0;
+                const net = subtotal - discount;
+                const dp = ord.dpAmount || 0;
+                const remaining = Math.max(0, net - dp);
+
+                totalGross += subtotal;
+                totalDiscount += discount;
+                totalNet += net;
+                totalPaid += (ord.paymentStatus === 'Lunas' ? net : dp);
+                totalOutstanding += remaining;
+
+                ord.items.forEach(item => {
+                    totalPcs += (item.qty || 0);
+                    productSalesMap[item.name] = (productSalesMap[item.name] || 0) + item.qty;
+                });
+            });
+
+            const wb = XLSX.utils.book_new();
+
+            // Sheet 1: Executive KPI Summary & Top Ranking
+            const summaryData = [
+                ["LAPORAN EXECUTIVE SALES & ANALYTICS - " + brandConfig.name.toUpperCase()],
+                ["Tagline", brandConfig.tagline],
+                ["Tanggal Ekspor", new Date().toLocaleString('id-ID')],
+                ["Filter Periode", currentReportPeriod.toUpperCase()],
+                [""],
+                ["RINGKASAN METRIK FINANSIAL"],
+                ["Total Volume Nota", activeReportData.length],
+                ["Total Gross Sales", totalGross],
+                ["Total Diskon", totalDiscount],
+                ["Total Net Sales", totalNet],
+                ["Total Uang Masuk (Paid/DP)", totalPaid],
+                ["Total Piutang (Outstanding)", totalOutstanding],
+                ["Total Apparel Terjual (Pcs)", totalPcs],
+                [""],
+                ["TOP 5 PRODUK / PAKET TERLARIS"],
+                ["Nama Produk / Paket", "Jumlah Terjual (Pcs)", "Persentase Volume"]
+            ];
+
+            Object.entries(productSalesMap)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .forEach(([pName, qty]) => {
+                    const pct = ((qty / (totalPcs || 1)) * 100).toFixed(1) + "%";
+                    summaryData.push([pName, qty, pct]);
+                });
+
+            const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+            XLSX.utils.book_append_sheet(wb, wsSummary, "Ringkasan Executive");
+
+            // Sheet 2: Detailed Transaction Records
+            const detailHeaders = [
+                ["ID Nota", "Tanggal", "Nama Pemesan", "No WhatsApp", "Status Bayar", "Metode Bayar", "Total Qty (Pcs)", "Subtotal Gross", "Diskon", "Total Net", "DP Paid", "Sisa Tagihan"]
+            ];
+
+            const detailRows = activeReportData.map(ord => {
+                const subtotal = ord.items.reduce((s, i) => s + i.subtotal, 0);
+                const discount = ord.discount || 0;
+                const net = subtotal - discount;
+                const dp = ord.dpAmount || 0;
+                const remaining = Math.max(0, net - dp);
+                const totalQty = ord.items.reduce((q, i) => q + i.qty, 0);
+
+                return [
+                    ord.orderId,
+                    ord.date,
+                    ord.customerName || 'Pelanggan Umum',
+                    ord.customerPhone || '-',
+                    ord.paymentStatus,
+                    ord.paymentMethodDetail,
+                    totalQty,
+                    subtotal,
+                    discount,
+                    net,
+                    dp,
+                    remaining
+                ];
+            });
+
+            const wsDetail = XLSX.utils.aoa_to_sheet(detailHeaders.concat(detailRows));
+            XLSX.utils.book_append_sheet(wb, wsDetail, "Detail Transaksi");
+
+            XLSX.writeFile(wb, `Laporan_Executive_${brandConfig.name.replace(/\s+/g, '_')}_${currentReportPeriod}_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        function printExecutiveReport() {
+            if (!activeReportData || activeReportData.length === 0) {
+                alert('Tidak ada data laporan untuk dicetak.');
+                return;
+            }
+
+            const printArea = document.getElementById('print-area');
+            const modalInvoice = document.getElementById('modal-invoice');
+            const wasInvoiceHidden = modalInvoice.classList.contains('hidden');
+
+            const reportContentHtml = document.getElementById('report-modal-content').innerHTML;
+
+            printArea.className = "bg-white text-slate-800 p-6 rounded-xl transition-all w-full max-w-3xl min-h-[600px] border border-slate-200 flex flex-col justify-between space-y-4";
+            printArea.innerHTML = `
+                <div class="border-b border-slate-200 pb-3 mb-2 flex justify-between items-center">
+                    <div>
+                        <h1 class="text-xl font-black text-slate-900">${brandConfig.name}</h1>
+                        <p class="text-xs text-slate-500">${brandConfig.tagline} | ${brandConfig.address}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-extrabold text-sm uppercase text-blue-600 block">REKAPAN LAPORAN EXECUTIVE</span>
+                        <span class="text-[10px] text-slate-400">Periode: ${currentReportPeriod.toUpperCase()}</span>
+                    </div>
+                </div>
+                ${reportContentHtml}
+            `;
+
+            if (wasInvoiceHidden) {
+                modalInvoice.classList.remove('hidden');
+            }
+
+            setTimeout(() => {
+                window.print();
+                if (wasInvoiceHidden) {
+                    modalInvoice.classList.add('hidden');
+                }
+            }, 100);
+        }
+
+        /* 9. REPRINT MODAL & FLOATING SEARCH FLOW */
+        function openReprintModal() {
+            document.getElementById('modal-reprint').classList.remove('hidden');
+            document.getElementById('reprint-search-input').value = '';
+            searchReprintOrders();
+        }
+
+        function closeReprintModal() {
+            document.getElementById('modal-reprint').classList.add('hidden');
+        }
+
+        function searchReprintOrders() {
+            const q = document.getElementById('reprint-search-input').value.toLowerCase().trim();
+            const container = document.getElementById('reprint-results-list');
+            const history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
+
+            const matches = history.filter(h => 
+                h.orderId.toLowerCase().includes(q) || 
+                h.customerName.toLowerCase().includes(q) ||
+                (h.customerPhone && h.customerPhone.includes(q))
+            );
+
+            if (matches.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-slate-400 text-xs">
+                        <i class="fa-solid fa-magnifying-glass text-2xl mb-2 text-slate-300"></i>
+                        <p>Data transaksi tidak ditemukan.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = matches.map(h => `
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3 hover:border-blue-300 transition">
+                    <div class="overflow-hidden text-xs space-y-0.5">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-900 mono">#${h.orderId}</span>
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${h.paymentStatus === 'Lunas' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${h.paymentStatus}</span>
+                        </div>
+                        <p class="font-semibold text-slate-700 truncate">${h.customerName}</p>
+                        <p class="text-[10px] text-slate-400">${h.date}</p>
+                    </div>
+                    <button onclick="closeReprintModal(); reloadHistoryToPreview('${h.orderId}');" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 flex-shrink-0">
+                        <i class="fa-solid fa-print text-[10px]"></i> Cetak
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        /* 10. DATA HISTORY & LOCAL STORAGE MANAGEMENT */
         function saveOrderToHistory(order) {
             let history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
             history.unshift(order);
             localStorage.setItem('glamstitch_orders_history', JSON.stringify(history));
             renderHistoryList();
-            syncToDropbox();
-        }
-
-        function getOrderFinance(o) {
-            const total = Math.max(0, (Number(o.subtotal) || 0) - (Number(o.discount) || 0));
-            const paid = o.paymentStatus === 'Lunas' ? total : Math.min(total, Number(o.dpAmount) || 0);
-            return { total, paid, balance: Math.max(0, total - paid) };
         }
 
         function renderHistoryList() {
             const container = document.getElementById('history-list');
-            const history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
-            const cur = brandConfig.currency || 'Rp';
+            let history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
+
+            // Update Badge Count
             document.getElementById('nav-badge-count').innerText = history.length;
 
-            let rev = 0, rem = 0;
-            history.forEach(h => { const f = getOrderFinance(h); rev += f.total; rem += f.balance; });
-            document.getElementById('stat-total-orders').innerText = history.length;
-            document.getElementById('stat-total-revenue').innerText = `${cur} ${formatRupiah(rev)}`;
-            document.getElementById('stat-total-remaining').innerText = `${cur} ${formatRupiah(rem)}`;
+            // Search & Filter Logic
+            const searchQ = document.getElementById('history-search-input')?.value.toLowerCase() || '';
+            const statusFilter = document.getElementById('history-status-filter')?.value || 'ALL';
 
-            const q = (document.getElementById('history-search-input')?.value || '').trim().toLowerCase();
-            const st = document.getElementById('history-status-filter')?.value || 'ALL';
-            const list = history.filter(h =>
-                (st === 'ALL' || h.paymentStatus === st) &&
-                (!q || String(h.customerName || '').toLowerCase().includes(q) || String(h.orderId || '').toLowerCase().includes(q))
-            );
-
-            if (list.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs">${history.length ? 'Tidak ada data yang cocok.' : 'Belum ada riwayat transaksi.'}</div>`;
-                return;
-            }
-
-            container.innerHTML = list.map(h => {
-                const f = getOrderFinance(h);
-                return `
-                <div class="p-3 bg-white border border-slate-200 rounded-xl flex justify-between items-center gap-2 text-xs">
-                    <div class="min-w-0">
-                        <span class="font-bold mono">#${h.orderId}</span> - <span class="font-bold">${h.customerName}</span>
-                        <p class="text-[10px] text-slate-400">${h.date} • ${h.paymentStatus} • Total ${cur} ${formatRupiah(f.total)} • Sisa ${cur} ${formatRupiah(f.balance)}</p>
-                    </div>
-                    <div class="flex items-center gap-1.5 flex-shrink-0">
-                        ${h.paymentStatus !== 'Lunas' ? `<button onclick="markOrderLunas('${h.orderId}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition"><i class="fa-solid fa-check mr-1"></i>Lunas</button>` : ''}
-                        <button onclick="reloadHistoryToPreview('${h.orderId}')" class="px-2.5 py-1 bg-blue-50 text-blue-600 font-bold rounded-lg">Buka</button>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function renderCustomerData() {
-            const box = document.getElementById('customer-data-list');
-            if (!box) return;
-            const history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
-            const q = (document.getElementById('customer-search-input')?.value || '').trim().toLowerCase();
-            const esc = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            const map = new Map();
-            history.forEach(h => {
-                const name = String(h.customerName || '').trim();
-                if (!name || name === 'Pelanggan Umum') return;
-                const key = name.toLowerCase();
-                const phone = h.customerPhone && h.customerPhone !== '-' ? h.customerPhone : '';
-                const address = h.customerAddress && h.customerAddress !== '-' ? h.customerAddress : '';
-                if (!map.has(key)) map.set(key, { name, phone, address, orders: 1 });
-                else {
-                    const c = map.get(key);
-                    c.orders++;
-                    if (!c.phone && phone) c.phone = phone;
-                    if (!c.address && address) c.address = address;
-                }
+            let filtered = history.filter(h => {
+                const matchQuery = h.customerName.toLowerCase().includes(searchQ) || h.orderId.toLowerCase().includes(searchQ);
+                const matchStatus = (statusFilter === 'ALL') || (h.paymentStatus === statusFilter);
+                return matchQuery && matchStatus;
             });
-            let customers = [...map.values()];
-            if (q) customers = customers.filter(c => `${c.name} ${c.phone} ${c.address}`.toLowerCase().includes(q));
-            document.getElementById('customer-data-count').innerText = `${customers.length} Konsumen`;
-            if (customers.length === 0) {
-                box.innerHTML = `<div class="col-span-full p-4 text-center text-slate-400 text-xs">${map.size ? 'Tidak ada konsumen yang cocok.' : 'Belum ada data konsumen.'}</div>`;
+
+            // Calculate Analytics Metrics across ALL history entries
+            let totalRevenue = 0;
+            let totalRemaining = 0;
+
+            history.forEach(h => {
+                const sub = h.items.reduce((s, i) => s + i.subtotal, 0);
+                const tot = sub - (h.discount || 0);
+                totalRevenue += tot;
+                totalRemaining += Math.max(0, tot - (h.dpAmount || 0));
+            });
+
+            document.getElementById('stat-total-orders').innerText = history.length;
+            document.getElementById('stat-total-revenue').innerText = `${brandConfig.currency} ${formatRupiah(totalRevenue)}`;
+            document.getElementById('stat-total-remaining').innerText = `${brandConfig.currency} ${formatRupiah(totalRemaining)}`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 sm:p-8 text-center bg-white rounded-2xl border border-slate-200">
+                        <i class="fa-solid fa-folder-open text-2xl sm:text-3xl text-slate-300 mb-2"></i>
+                        <p class="text-xs font-semibold text-slate-500">Belum ada data transaksi yang cocok.</p>
+                    </div>
+                `;
                 return;
             }
-            box.innerHTML = customers.map(c => `
-                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="font-bold text-slate-800 truncate">${esc(c.name)}</span>
-                        <span class="text-[10px] font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full whitespace-nowrap">${c.orders}x Order</span>
-                    </div>
-                    <p class="text-slate-500"><i class="fa-solid fa-phone w-4 text-[10px] text-slate-400"></i>${c.phone ? esc(c.phone) : '-'}</p>
-                    <p class="text-slate-500 leading-snug"><i class="fa-solid fa-location-dot w-4 text-[10px] text-slate-400"></i>${c.address ? esc(c.address) : '-'}</p>
-                </div>`).join('');
-        }
 
-        function markOrderLunas(orderId) {
-            let history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
-            const o = history.find(h => h.orderId === orderId);
-            if (!o) return;
-            const cur = brandConfig.currency || 'Rp';
-            const f = getOrderFinance(o);
-            if (!confirm(`Tandai nota #${orderId} (${o.customerName}) sebagai LUNAS?\nSisa ${cur} ${formatRupiah(f.balance)} dianggap sudah dibayar.`)) return;
-            o.paymentStatus = 'Lunas';
-            o.dpAmount = f.total;
-            o.paidOffDate = new Date().toLocaleDateString('id-ID');
-            localStorage.setItem('glamstitch_orders_history', JSON.stringify(history));
-            if (previewOrderStore && previewOrderStore.orderId === orderId) previewOrderStore = o;
-            renderHistoryList();
-            syncToDropbox();
+            container.innerHTML = filtered.map((h, i) => {
+                const subtotal = h.items.reduce((sum, item) => sum + item.subtotal, 0);
+                const grandTotal = subtotal - h.discount;
+                const remaining = Math.max(0, grandTotal - h.dpAmount);
+
+                return `
+                    <div class="p-3.5 sm:p-4 bg-white border border-slate-200 rounded-2xl soft-shadow flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 hover:border-blue-200 transition">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-extrabold text-xs sm:text-sm text-slate-900 mono">#${h.orderId}</span>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${h.paymentStatus === 'Lunas' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${h.paymentStatus}</span>
+                                <span class="text-[10px] font-medium text-slate-400">${h.date}</span>
+                            </div>
+                            <p class="text-xs font-bold text-slate-800">${h.customerName} <span class="font-normal text-slate-500">(${h.customerPhone})</span></p>
+                            <p class="text-[10px] sm:text-[11px] text-slate-500">${h.items.length} Paket Apparel • Metode: ${h.paymentMethodDetail}</p>
+                        </div>
+
+                        <div class="flex items-center justify-between md:justify-end gap-3 sm:gap-4 border-t md:border-t-0 pt-2.5 md:pt-0 border-slate-100">
+                            <div class="text-left md:text-right">
+                                <p class="text-[10px] sm:text-xs text-slate-400 uppercase font-semibold">Total / Sisa</p>
+                                <p class="text-xs sm:text-sm font-black text-slate-900 mono">${brandConfig.currency} ${formatRupiah(grandTotal)}</p>
+                                <p class="text-[10px] sm:text-[11px] font-bold text-amber-600 mono">Sisa: ${brandConfig.currency} ${formatRupiah(remaining)}</p>
+                            </div>
+                            <div class="flex items-center gap-1.5 sm:gap-2">
+                                <button onclick="reloadHistoryToPreview('${h.orderId}')" class="px-2.5 sm:px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                                    <i class="fa-solid fa-print"></i> Cetak
+                                </button>
+                                <button onclick="deleteHistoryEntry('${h.orderId}')" class="px-2.5 sm:px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold transition flex items-center gap-1" title="Hapus Data">
+                                    <i class="fa-solid fa-trash"></i> Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function reloadHistoryToPreview(orderId) {
@@ -1609,403 +2075,136 @@
             }
         }
 
-        function setDocumentMode(mode) {
-            documentMode = mode === 'receipt' ? 'receipt' : 'invoice';
-            const invoiceBtn = document.getElementById('btn-mode-invoice');
-            const receiptBtn = document.getElementById('btn-mode-receipt');
-            const active = 'px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition';
-            const inactive = 'px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition';
-            invoiceBtn.className = documentMode === 'invoice' ? active : inactive;
-            receiptBtn.className = documentMode === 'receipt' ? active : inactive;
-            renderDocumentPreview();
-        }
+        function deleteHistoryEntry(orderId) {
+            if (confirm(`Hapus transaksi #${orderId} dari riwayat data masuk?\n\nTindakan ini akan otomatis memperbarui Total Omset, Sisa Piutang, dan Data Konsumen.`)) {
+                let history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
+                const target = history.find(h => h.orderId === orderId);
 
-        function renderDocumentPreview() {
-            const printArea = document.getElementById('print-area');
-            if (!previewOrderStore) return;
-            const o = previewOrderStore;
-            const money = (value) => `${brandConfig.currency || 'Rp'} ${formatRupiah(Number(value) || 0)}`;
-            const total = Math.max(0, (Number(o.subtotal) || 0) - (Number(o.discount) || 0));
-            const balance = Math.max(0, total - (Number(o.dpAmount) || 0));
-            const paymentStatus = o.paymentStatus || 'DP';
-            const paymentMethod = o.paymentMethodDetail || '-';
-            const noteLines = String(o.notes || '').split(/\r?\n/).filter(Boolean);
-            const barcodeValue = String(o.orderId || 'ORDER').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) || 'ORDER';
-            const qrText = JSON.stringify({ order: o.orderId, date: o.date, customer: o.customerName, total, paid: o.dpAmount || 0, balance });
+                // Filter out the deleted history item
+                history = history.filter(h => h.orderId !== orderId);
+                localStorage.setItem('glamstitch_orders_history', JSON.stringify(history));
 
-            if (documentMode === 'receipt') {
-                printArea.className = 'document-receipt bg-white text-slate-900 p-4 text-[11px] leading-tight';
-                printArea.innerHTML = `
-                    <div class="text-center space-y-1">
-                        ${brandConfig.logoUrl ? `<img src="${brandConfig.logoUrl}" alt="Logo" class="mx-auto h-10 max-w-[150px] object-contain">` : ''}
-                        <div class="text-[16px] font-black uppercase tracking-tight">${brandConfig.name}</div>
-                        <div class="text-[9px] font-bold uppercase">${brandConfig.tagline || ''}</div>
-                        <div class="text-[9px] leading-snug invoice-muted">${brandConfig.address || ''}</div>
-                        <div class="text-[9px] invoice-muted">WA: ${brandConfig.whatsapp || '-'}${brandConfig.instagram ? ` • ${brandConfig.instagram}` : ''}</div>
-                    </div>
-                    <div class="receipt-divider my-3"></div>
-                    <div class="flex justify-between text-[10px]">
-                        <span>NO. NOTA</span><b>#${o.orderId}</b>
-                    </div>
-                    <div class="flex justify-between text-[10px]">
-                        <span>TANGGAL</span><span>${o.date}</span>
-                    </div>
-                    <div class="flex justify-between text-[10px]">
-                        <span>PEMESAN</span><span class="text-right ml-3">${o.customerName}</span>
-                    </div>
-                    <div class="flex justify-between text-[10px]">
-                        <span>WHATSAPP</span><span>${o.customerPhone || '-'}</span>
-                    </div>
-                    <div class="receipt-divider my-3"></div>
-                    <div class="space-y-2">
-                        ${o.items.map(i => `
-                            <div>
-                                <div class="flex justify-between gap-2 font-bold"><span class="flex-1">${i.name}</span><span>${money(i.subtotal)}</span></div>
-                                <div class="text-[9px] invoice-muted">${i.qty} x ${money(i.unitPrice)}</div>
-                                ${Array.isArray(i.details) && i.details.length ? `<div class="text-[9px] invoice-muted">${i.details.join(' • ')}</div>` : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="receipt-divider my-3"></div>
-                    <div class="space-y-1">
-                        <div class="flex justify-between"><span>SUBTOTAL</span><span>${money(o.subtotal)}</span></div>
-                        <div class="flex justify-between"><span>DISKON</span><span>-${money(o.discount)}</span></div>
-                        <div class="flex justify-between"><span>TOTAL</span><b>${money(total)}</b></div>
-                        <div class="flex justify-between"><span>DP / PAID</span><span>${money(o.dpAmount)}</span></div>
-                        <div class="flex justify-between text-[13px] font-black pt-1"><span>SISA TAGIHAN</span><span>${money(balance)}</span></div>
-                    </div>
-                    <div class="receipt-divider my-3"></div>
-                    <div class="space-y-1 text-[9px]">
-                        <div><b>STATUS:</b> ${paymentStatus}</div>
-                        <div><b>METODE:</b> ${paymentMethod}</div>
-                    </div>
-                    <div class="receipt-divider my-3"></div>
-                    <div class="text-center">
-                        <svg id="receipt-barcode" class="mx-auto"></svg>
-                        <div id="receipt-qr" class="mx-auto mt-2 w-[82px] h-[82px] flex items-center justify-center"></div>
-                        <p class="text-[9px] mt-2 font-bold">Terima kasih atas pesanan Anda.</p>
-                    </div>
-                    ${noteLines.length ? `<div class="receipt-divider my-3"></div><div class="text-[8px] leading-snug space-y-0.5">${noteLines.map(n => `<div>${n}</div>`).join('')}</div>` : ''}
-                `;
-                if (window.JsBarcode) {
-                    JsBarcode('#receipt-barcode', barcodeValue, { format:'CODE128', width:1.5, height:42, displayValue:true, fontSize:9, margin:0 });
-                }
-                const receiptQr = document.getElementById('receipt-qr');
-                if (receiptQr && window.QRCode) new QRCode(receiptQr, { text: qrText, width:82, height:82, correctLevel: QRCode.CorrectLevel.M });
-                return;
-            }
-
-            printArea.className = 'document-a4 bg-white text-slate-800 p-8 rounded-xl soft-shadow';
-            printArea.innerHTML = `
-                <div class="h-full flex flex-col">
-                    <div class="flex items-start justify-between pb-5 border-b invoice-rule">
-                        <div class="flex items-start gap-4">
-                            ${brandConfig.logoUrl ? `<img src="${brandConfig.logoUrl}" alt="Logo" class="w-14 h-14 object-contain">` : `<div class="w-14 h-14 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-xl">${String(brandConfig.name || 'A').charAt(0).toUpperCase()}</div>`}
-                            <div>
-                                <h1 class="text-[22px] font-black tracking-tight leading-none">${brandConfig.name}</h1>
-                                <p class="text-[11px] text-blue-600 font-extrabold uppercase tracking-wider mt-1">${brandConfig.tagline || ''}</p>
-                                <p class="text-[10px] invoice-muted leading-relaxed mt-2 max-w-[420px]">${brandConfig.address || ''}</p>
-                                <p class="text-[10px] invoice-muted">WA: ${brandConfig.whatsapp || '-'}${brandConfig.instagram ? ` | ${brandConfig.instagram}` : ''}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="inline-block bg-slate-900 text-white px-3 py-1 rounded-md text-[11px] font-black tracking-wider">INVOICE</div>
-                            <div class="mono text-[13px] font-bold mt-2">#${o.orderId}</div>
-                            <div class="text-[10px] invoice-muted mt-1">${o.date}</div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 mt-5">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-                            <div class="invoice-label mb-1">Diterbitkan Untuk:</div>
-                            <div class="font-bold text-[13px]">${o.customerName}</div>
-                            <div class="text-[10px] invoice-muted mt-1">No. Telp: ${o.customerPhone || '-'}</div>
-                            <div class="text-[10px] invoice-muted mt-0.5 leading-snug">Alamat: ${o.customerAddress || '-'}</div>
-                        </div>
-                        <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-                            <div class="invoice-label mb-1">Info Pembayaran:</div>
-                            <div class="font-bold text-[11px] leading-relaxed">${paymentMethod}</div>
-                            <div class="text-[10px] invoice-muted mt-1">${paymentStatus === 'Lunas' ? 'Pembayaran: LUNAS' : `DP dibayar: ${money(o.dpAmount)}`}</div>
-                            <span class="inline-block mt-2 px-2 py-1 rounded bg-amber-100 text-amber-800 text-[9px] font-black">STATUS: ${paymentStatus.toUpperCase()}</span>
-                        </div>
-                    </div>
-
-                    <div class="mt-6">
-                        <table class="w-full invoice-table border-collapse">
-                            <thead><tr class="border-b-2 border-slate-200"><th class="text-left pb-2">Deskripsi Apparel</th><th class="text-center pb-2 w-16">Qty</th><th class="text-right pb-2 w-32">Harga Unit</th><th class="text-right pb-2 w-32">Subtotal</th></tr></thead>
-                            <tbody>
-                                ${o.items.map(i => `
-                                    <tr class="border-b border-slate-100">
-                                        <td class="py-3 pr-4"><div class="font-bold text-[11px]">${i.name}</div>${Array.isArray(i.details) && i.details.length ? `<div class="text-[9px] invoice-muted mt-1">${i.details.join(' • ')}</div>` : ''}</td>
-                                        <td class="py-3 text-center mono">${i.qty}</td>
-                                        <td class="py-3 text-right mono">${money(i.unitPrice)}</td>
-                                        <td class="py-3 text-right mono font-bold">${money(i.subtotal)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="flex justify-end mt-5">
-                        <div class="w-[280px] space-y-2 text-[11px]">
-                            <div class="flex justify-between invoice-muted"><span>Subtotal</span><span class="mono">${money(o.subtotal)}</span></div>
-                            <div class="flex justify-between text-rose-500"><span>Diskon</span><span class="mono">-${money(o.discount)}</span></div>
-                            <div class="flex justify-between text-emerald-600"><span>Nominal DP Paid</span><span class="mono font-bold">${money(o.dpAmount)}</span></div>
-                            <div class="flex justify-between items-baseline border-t border-slate-200 pt-3 text-[15px] font-black"><span>Sisa Tagihan</span><span class="mono text-blue-600">${money(balance)}</span></div>
-                        </div>
-                    </div>
-
-                    ${noteLines.length ? `<div class="invoice-note rounded-xl p-3.5 mt-6"><div class="text-[10px] font-black text-amber-900 uppercase tracking-wide mb-1.5"><i class="fa-solid fa-lock mr-1"></i> Catatan Produksi & Syarat Garansi</div><div class="text-[9px] text-amber-900 leading-relaxed space-y-0.5">${noteLines.map(n => `<div>${n}</div>`).join('')}</div></div>` : ''}
-
-                    <div class="mt-auto pt-5 border-t invoice-rule flex items-end justify-between">
-                        <div>
-                            <svg id="invoice-barcode"></svg>
-                            <div class="text-[8px] invoice-muted mono mt-1">${barcodeValue}</div>
-                        </div>
-                        <div class="text-center">
-                            <div id="invoice-qr" class="w-[86px] h-[86px] flex items-center justify-center"></div>
-                            <div class="text-[8px] invoice-muted mt-1">Scan untuk detail transaksi</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            if (window.JsBarcode) {
-                JsBarcode('#invoice-barcode', barcodeValue, { format:'CODE128', width:2, height:44, displayValue:false, margin:0 });
-            }
-            const invoiceQr = document.getElementById('invoice-qr');
-            if (invoiceQr && window.QRCode) new QRCode(invoiceQr, { text: qrText, width:86, height:86, correctLevel: QRCode.CorrectLevel.M });
-        }
-
-        function closeInvoiceModal() { document.getElementById('modal-invoice').classList.add('hidden'); }
-        function triggerPrint() { window.print(); }
-
-        function openBackupModal() { document.getElementById('modal-backup').classList.remove('hidden'); }
-        function closeBackupModal() { document.getElementById('modal-backup').classList.add('hidden'); }
-
-        function switchTab(tab) {
-            document.getElementById('tab-pos-content').classList.add('hidden');
-            document.getElementById('tab-history-content').classList.add('hidden');
-            document.getElementById('tab-brand-content').classList.add('hidden');
-            document.getElementById('tab-customers-content').classList.add('hidden');
-
-            if (tab === 'customers') { document.getElementById('tab-customers-content').classList.remove('hidden'); renderCustomerData(); }
-            if (tab === 'pos') document.getElementById('tab-pos-content').classList.remove('hidden');
-            if (tab === 'history') { document.getElementById('tab-history-content').classList.remove('hidden'); renderHistoryList(); }
-            if (tab === 'brand') document.getElementById('tab-brand-content').classList.remove('hidden');
-        }
-
-        function formatRupiah(num) { return new Intl.NumberFormat('id-ID').format(num); }
-
-        /* ===== MODAL ADD-ON FIXES ===== */
-        function effectiveLogoPrice() {
-            const el = document.getElementById('addon-logo');
-            const opt = el.options[el.selectedIndex];
-            if (opt && opt.id === 'opt-logo-dtf' && document.getElementById('add-dtf-pkg').checked) return 0;
-            return parseInt(el.value) || 0;
-        }
-        function onAddonChange() {
-            calculateModalPrice();
-            const opt = document.getElementById('addon-logo');
-            const isDtf = opt.options[opt.selectedIndex].id === 'opt-logo-dtf' && document.getElementById('add-dtf-pkg').checked;
-            document.getElementById('dtf-override-badge').classList.toggle('hidden', !isDtf);
-        }
-        document.querySelectorAll('#modal-addon select, #modal-addon input[type="checkbox"]').forEach(el => el.addEventListener('change', onAddonChange));
-
-        function changeModalQty(d) {
-            const el = document.getElementById('modal-qty');
-            el.value = (parseInt(el.value) || 1) + d;
-            validateModalQty();
-        }
-        function validateModalQty() {
-            const min = selectedProductForModal ? selectedProductForModal.minQty : 1;
-            const el = document.getElementById('modal-qty');
-            let v = parseInt(el.value) || min;
-            if (v < min) v = min;
-            el.value = v;
-        }
-
-        /* ===== LOGO UPLOAD ===== */
-        function renderSidebarLogo(url) {
-            const box = document.getElementById('sidebar-logo-container');
-            if (!box) return;
-            box.style.background = url ? '#fff' : '';
-            box.innerHTML = url ? `<img src="${url}" alt="Logo" class="w-full h-full object-contain">` : '<i class="fa-solid fa-shirt"></i>';
-        }
-        function previewLogoUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            if (!file.type.startsWith('image/')) { alert('File harus berupa gambar.'); e.target.value = ''; return; }
-            const reader = new FileReader();
-            reader.onload = ev => {
-                const img = new Image();
-                img.onload = () => {
-                    const s = Math.min(1, 300 / Math.max(img.width, img.height));
-                    const c = document.createElement('canvas');
-                    c.width = Math.max(1, Math.round(img.width * s));
-                    c.height = Math.max(1, Math.round(img.height * s));
-                    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-                    const data = c.toDataURL('image/png');
-                    document.getElementById('cfg-logo-url').value = data; // ikut tersimpan lewat saveBrandSettings()
-                    renderSidebarLogo(data);
-                };
-                img.onerror = () => alert('Gambar tidak bisa dibaca.');
-                img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        /* ===== BACKUP JSON / IMPORT / RESET ===== */
-        function mergeIncomingData(data) {
-            if (Array.isArray(data.ordersHistory)) {
-                const local = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
-                const ids = new Set(local.map(o => o.orderId));
-                const merged = [...local, ...data.ordersHistory.filter(o => !ids.has(o.orderId))]
-                    .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                localStorage.setItem('glamstitch_orders_history', JSON.stringify(merged));
-            }
-            if (Array.isArray(data.customersDatabase)) {
-                const local = JSON.parse(localStorage.getItem('glamstitch_customers') || '[]');
-                const names = new Set(local.map(c => String(c.name).toLowerCase()));
-                const merged = [...local, ...data.customersDatabase.filter(c => c.name && !names.has(String(c.name).toLowerCase()))];
-                localStorage.setItem('glamstitch_customers', JSON.stringify(merged));
-            }
-            if (data.brandConfig && typeof data.brandConfig === 'object' && Object.keys(data.brandConfig).length) {
-                brandConfig = { ...brandConfig, ...data.brandConfig };
-                localStorage.setItem('glamstitch_brand_config', JSON.stringify(brandConfig));
-            }
-        }
-        function exportJSONBackup() {
-            const blob = new Blob([JSON.stringify(buildDropboxPayload(), null, 2)], { type: 'application/json' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `glamstitch_backup_${new Date().toISOString().slice(0, 10)}.json`;
-            document.body.appendChild(a); a.click(); a.remove();
-            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-        }
-        function importJSONBackup(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = ev => {
-                try {
-                    const data = JSON.parse(ev.target.result);
-                    if (!data || typeof data !== 'object' || !(Array.isArray(data.ordersHistory) || data.brandConfig || Array.isArray(data.customersDatabase))) {
-                        throw new Error('Format file backup tidak dikenali.');
+                // Update customer database order counts
+                if (target && target.customerName) {
+                    let customers = JSON.parse(localStorage.getItem('glamstitch_customers') || '[]');
+                    const custIdx = customers.findIndex(c => c.name.toLowerCase() === target.customerName.toLowerCase());
+                    if (custIdx !== -1) {
+                        customers[custIdx].orderCount = Math.max(0, (customers[custIdx].orderCount || 1) - 1);
+                        if (customers[custIdx].orderCount === 0) {
+                            customers.splice(custIdx, 1);
+                        }
+                        localStorage.setItem('glamstitch_customers', JSON.stringify(customers));
                     }
-                    if (!confirm('Import akan DIGABUNG dengan data yang ada (nota dengan ID sama tidak diduplikasi). Lanjutkan?')) return;
-                    mergeIncomingData(data);
-                    renderHistoryList(); applyBrandUI(); syncToDropbox();
-                    alert('SUKSES! Data berhasil diimport.');
-                } catch (err) { alert('Gagal import: ' + err.message); }
-                finally { e.target.value = ''; }
+                }
+
+                renderHistoryList();
+            }
+        }
+
+        /* 11. BACKUP & RESTORE MODAL */
+        function openBackupModal() {
+            document.getElementById('modal-backup').classList.remove('hidden');
+        }
+
+        function closeBackupModal() {
+            document.getElementById('modal-backup').classList.add('hidden');
+        }
+
+        function exportJSONBackup() {
+            const history = localStorage.getItem('glamstitch_orders_history') || '[]';
+            const customers = localStorage.getItem('glamstitch_customers') || '[]';
+            const backupData = {
+                app: 'Glamstitch POS Engine V5',
+                version: '5.0',
+                brandConfig: brandConfig,
+                customersDatabase: JSON.parse(customers),
+                exportedAt: new Date().toISOString(),
+                ordersHistory: JSON.parse(history)
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `apparel_pos_backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importJSONBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed && (parsed.ordersHistory || parsed.brandConfig || parsed.customersDatabase)) {
+                        if (parsed.brandConfig) {
+                            brandConfig = parsed.brandConfig;
+                            localStorage.setItem('glamstitch_brand_config', JSON.stringify(brandConfig));
+                            applyBrandUI();
+                        }
+                        if (parsed.ordersHistory) {
+                            localStorage.setItem('glamstitch_orders_history', JSON.stringify(parsed.ordersHistory));
+                            renderHistoryList();
+                        }
+                        if (parsed.customersDatabase) {
+                            localStorage.setItem('glamstitch_customers', JSON.stringify(parsed.customersDatabase));
+                        }
+                        alert('Data berhasil di-restore! Riwayat nota, database konsumen, dan identitas brand telah diperbarui.');
+                        closeBackupModal();
+                    } else {
+                        alert('Format file JSON tidak valid!');
+                    }
+                } catch (err) {
+                    alert('Gagal membaca file JSON: ' + err.message);
+                }
             };
             reader.readAsText(file);
         }
-        async function triggerFullWebReset() {
-            if (!confirm('Semua transaksi, pelanggan & setting akan dihapus. Lanjutkan?')) return;
-            if (!confirm('YAKIN? Tindakan ini tidak bisa dibatalkan (data di Dropbox juga ikut dikosongkan).')) return;
-            ['glamstitch_orders_history', 'glamstitch_customers', 'glamstitch_brand_config'].forEach(k => localStorage.removeItem(k));
-            await syncToDropbox(false);
-            location.reload();
+
+        /* 12. NAVIGATION TABS SWITCHER */
+        function switchTab(tab) {
+            const posContent = document.getElementById('tab-pos-content');
+            const historyContent = document.getElementById('tab-history-content');
+            const brandContent = document.getElementById('tab-brand-content');
+
+            const navPos = document.getElementById('nav-pos');
+            const navHistory = document.getElementById('nav-history');
+            const navBrand = document.getElementById('nav-brand');
+
+            posContent.classList.add('hidden');
+            historyContent.classList.add('hidden');
+            historyContent.classList.remove('flex');
+            brandContent.classList.add('hidden');
+            brandContent.classList.remove('flex');
+
+            const activeClass = "nav-item flex items-center gap-2 md:gap-3 px-3 md:px-3.5 py-2 md:py-3 rounded-xl bg-blue-600 text-white font-medium text-xs md:text-sm transition-all shadow-md shadow-blue-600/20 whitespace-nowrap";
+            const inactiveClass = "nav-item flex items-center gap-2 md:gap-3 px-3 md:px-3.5 py-2 md:py-3 rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-white font-medium text-xs md:text-sm transition-all whitespace-nowrap";
+
+            navPos.className = inactiveClass;
+            navHistory.className = inactiveClass + " relative";
+            if (navBrand) navBrand.className = inactiveClass;
+
+            if (tab === 'pos') {
+                posContent.classList.remove('hidden');
+                navPos.className = activeClass;
+            } else if (tab === 'history') {
+                historyContent.classList.remove('hidden');
+                historyContent.classList.add('flex');
+                navHistory.className = activeClass + " relative";
+                renderHistoryList();
+            } else if (tab === 'brand') {
+                brandContent.classList.remove('hidden');
+                brandContent.classList.add('flex');
+                if (navBrand) navBrand.className = activeClass;
+                applyBrandUI();
+            }
         }
 
-        /* ===== LAPORAN SALES ===== */
-        let reportPeriod = 'today';
-        const PERIOD_LABEL = { today: 'Harian (Hari Ini)', week: 'Mingguan (Minggu Ini)', month: 'Bulanan (Bulan Ini)', year: 'Tahunan (Tahun Ini)', all: 'Semua Periode' };
-
-        function parseOrderDate(o) {
-            if (o.timestamp) return new Date(o.timestamp);
-            const p = String(o.date || '').split('/');
-            return p.length === 3 ? new Date(+p[2], +p[1] - 1, +p[0]) : new Date(0);
-        }
-        function summarizeReport() {
-            const history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
-            const now = new Date();
-            const sod = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const weekStart = new Date(sod); weekStart.setDate(sod.getDate() - ((sod.getDay() + 6) % 7));
-            const orders = history.filter(o => {
-                const d = parseOrderDate(o);
-                if (reportPeriod === 'today') return d >= sod;
-                if (reportPeriod === 'week') return d >= weekStart;
-                if (reportPeriod === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                if (reportPeriod === 'year') return d.getFullYear() === now.getFullYear();
-                return true;
-            });
-            let omset = 0, paid = 0, rem = 0, pcs = 0; const prod = {};
-            orders.forEach(o => {
-                const f = getOrderFinance(o); omset += f.total; paid += f.paid; rem += f.balance;
-                (o.items || []).forEach(i => {
-                    const q = Number(i.qty) || 0; pcs += q;
-                    const p = prod[i.name] || (prod[i.name] = { qty: 0, rev: 0 });
-                    p.qty += q; p.rev += Number(i.subtotal) || 0;
-                });
-            });
-            return { orders, omset, paid, rem, pcs, products: Object.entries(prod).sort((a, b) => b[1].rev - a[1].rev) };
-        }
-        function reportHTML() {
-            const r = summarizeReport();
-            const cur = brandConfig.currency || 'Rp';
-            const m = v => `${cur} ${formatRupiah(v)}`;
-            const th = 'text-align:left;padding:6px;border-bottom:2px solid #e2e8f0;font-size:11px;color:#64748b';
-            const td = 'padding:6px;border-bottom:1px solid #f1f5f9;font-size:12px';
-            const card = (l, v, c) => `<div style="flex:1;min-width:150px;border:1px solid #e2e8f0;border-radius:12px;padding:12px;background:#fff"><div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase">${l}</div><div style="font-size:16px;font-weight:800;color:${c}">${v}</div></div>`;
-            return `
-            <div style="font-family:'Plus Jakarta Sans',Arial,sans-serif;color:#0f172a">
-                <h2 style="margin:0 0 2px">${brandConfig.name} — Laporan Sales</h2>
-                <p style="margin:0 0 12px;font-size:12px;color:#64748b">Periode: ${PERIOD_LABEL[reportPeriod]} • Dicetak ${new Date().toLocaleString('id-ID')}</p>
-                <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px">
-                    ${card('Jumlah Nota', r.orders.length, '#0f172a')}
-                    ${card('Total Pcs', r.pcs, '#0f172a')}
-                    ${card('Omset', m(r.omset), '#059669')}
-                    ${card('Sudah Dibayar', m(r.paid), '#2563eb')}
-                    ${card('Sisa Piutang', m(r.rem), '#d97706')}
-                </div>
-                <h3 style="font-size:13px;margin:0 0 6px">Produk Terlaris</h3>
-                <table style="width:100%;border-collapse:collapse;margin-bottom:16px"><tr><th style="${th}">Produk</th><th style="${th}">Qty</th><th style="${th}">Nilai</th></tr>
-                ${r.products.map(([n, p]) => `<tr><td style="${td}">${n}</td><td style="${td}">${p.qty}</td><td style="${td}">${m(p.rev)}</td></tr>`).join('') || `<tr><td style="${td}" colspan="3">Tidak ada data.</td></tr>`}</table>
-                <h3 style="font-size:13px;margin:0 0 6px">Daftar Transaksi</h3>
-                <table style="width:100%;border-collapse:collapse"><tr><th style="${th}">Nota</th><th style="${th}">Tanggal</th><th style="${th}">Pemesan</th><th style="${th}">Status</th><th style="${th}">Total</th><th style="${th}">Dibayar</th><th style="${th}">Sisa</th></tr>
-                ${r.orders.map(o => { const f = getOrderFinance(o); return `<tr><td style="${td}">#${o.orderId}</td><td style="${td}">${o.date}</td><td style="${td}">${o.customerName}</td><td style="${td}">${o.paymentStatus}</td><td style="${td}">${m(f.total)}</td><td style="${td}">${m(f.paid)}</td><td style="${td}">${m(f.balance)}</td></tr>`; }).join('') || `<tr><td style="${td}" colspan="7">Tidak ada transaksi.</td></tr>`}</table>
-            </div>`;
-        }
-        function filterReportPeriod(p) {
-            reportPeriod = p;
-            const on = 'rep-period-btn px-2.5 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white transition whitespace-nowrap';
-            const off = 'rep-period-btn px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap';
-            ['today', 'week', 'month', 'year', 'all'].forEach(k => { document.getElementById('btn-rep-' + k).className = k === p ? on : off; });
-            document.getElementById('report-modal-content').innerHTML = reportHTML();
-        }
-        function openReportModal() {
-            document.getElementById('modal-report').classList.remove('hidden');
-            filterReportPeriod(reportPeriod);
-        }
-        function closeReportModal() { document.getElementById('modal-report').classList.add('hidden'); }
-
-        function exportReportXLSX() {
-            if (!window.XLSX) { alert('Library Excel belum termuat. Cek koneksi internet.'); return; }
-            const r = summarizeReport();
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
-                ['Laporan Sales', brandConfig.name], ['Periode', PERIOD_LABEL[reportPeriod]],
-                ['Jumlah Nota', r.orders.length], ['Total Pcs', r.pcs], ['Omset', r.omset], ['Sudah Dibayar', r.paid], ['Sisa Piutang', r.rem]
-            ]), 'Ringkasan');
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
-                ['Nota', 'Tanggal', 'Pemesan', 'WhatsApp', 'Status', 'Metode', 'Subtotal', 'Diskon', 'Total', 'Dibayar', 'Sisa'],
-                ...r.orders.map(o => { const f = getOrderFinance(o); return [o.orderId, o.date, o.customerName, o.customerPhone, o.paymentStatus, o.paymentMethodDetail, o.subtotal, o.discount, f.total, f.paid, f.balance]; })
-            ]), 'Transaksi');
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
-                ['Produk', 'Qty', 'Nilai'], ...r.products.map(([n, p]) => [n, p.qty, p.rev])
-            ]), 'Produk');
-            XLSX.writeFile(wb, `laporan_sales_${reportPeriod}_${new Date().toISOString().slice(0, 10)}.xlsx`);
-        }
-        function printExecutiveReport() {
-            const f = document.createElement('iframe');
-            f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
-            document.body.appendChild(f);
-            f.contentDocument.open();
-            f.contentDocument.write(`<html><head><title>Laporan Sales</title></head><body style="margin:16mm">${reportHTML()}</body></html>`);
-            f.contentDocument.close();
-            setTimeout(() => { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(() => f.remove(), 1500); }, 300);
+        function formatRupiah(num) {
+            return new Intl.NumberFormat('id-ID').format(num);
         }
     </script>
 </body>
