@@ -115,6 +115,7 @@
 </head>
 <body class="min-h-screen md:h-screen overflow-y-auto md:overflow-hidden flex flex-col md:flex-row bg-[#f8fafc]">
 
+    <!-- Sidebar Navigation -->
     <aside class="w-full md:w-20 lg:w-64 bg-[#0f172a] text-slate-300 flex flex-col justify-between z-20 flex-shrink-0 border-b md:border-b-0 md:border-r border-slate-800">
         <div>
             <!-- Logo Section -->
@@ -171,7 +172,7 @@
 
     <main class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden relative">
 
-        <!-- TAB 1: POS DASHBOARD & CATALOG -->
+        <!-- POS CATALOG TAB -->
         <section id="tab-pos-content" class="flex-1 flex flex-col overflow-visible md:overflow-hidden">
             <header class="h-auto md:h-16 py-3 md:py-0 bg-white border-b border-slate-200 px-3 sm:px-4 md:px-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 flex-shrink-0 soft-shadow">
                 <div class="flex items-center gap-3 flex-1 w-full sm:max-w-md">
@@ -204,7 +205,7 @@
             </div>
         </section>
 
-        <!-- TAB 2: TRANSACTIONS & DATA INSPECTION PAGE -->
+        <!-- DATA MASUK & TRANSAKSI TAB -->
         <section id="tab-history-content" class="flex-1 flex-col overflow-y-auto md:overflow-hidden bg-slate-50 hidden">
             <header class="h-auto md:h-16 py-3 md:py-0 bg-white border-b border-slate-200 px-3 sm:px-4 md:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 flex-shrink-0">
                 <div>
@@ -274,7 +275,7 @@
             </div>
         </section>
 
-        <!-- TAB 3: BRAND SETTINGS & CUSTOM NOTES PAGE (FULL PAGE LAYOUT) -->
+        <!-- BRAND & NOTES SETTINGS PAGE -->
         <section id="tab-brand-content" class="flex-1 flex-col overflow-y-auto md:overflow-hidden bg-slate-50 hidden">
             <header class="h-auto md:h-16 py-3 md:py-0 bg-white border-b border-slate-200 px-3 sm:px-4 md:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3 flex-shrink-0 soft-shadow">
                 <div class="flex items-center gap-2.5 sm:gap-3">
@@ -386,7 +387,7 @@
             </div>
         </section>
 
-        <!-- RIGHT SIDEBAR: ORDER SUMMARY PANEL -->
+        <!-- CART & ORDER SUMMARY SIDEBAR PANEL -->
         <aside class="w-full md:w-80 lg:w-96 bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col h-auto md:h-full z-10 soft-shadow flex-shrink-0">
             <div class="p-3.5 sm:p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div class="flex items-center gap-2.5">
@@ -669,28 +670,50 @@
         </div>
     </div>
 
-    <!-- JSON BACKUP & RESTORE MODAL -->
+    <!-- JSON BACKUP & DROPBOX CLOUD SYNC MODAL -->
     <div id="modal-backup" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
         <div class="bg-white rounded-2xl w-full max-w-md p-5 sm:p-6 soft-shadow space-y-4">
             <div class="flex items-center justify-between">
-                <h3 class="font-bold text-slate-800 text-sm sm:text-base">Backup & Restore Data</h3>
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm sm:text-base">Backup & Synchronize Data</h3>
+                        <p class="text-[11px] text-slate-400">Dropbox Cloud & Offline File Sync</p>
+                    </div>
+                </div>
                 <button onclick="closeBackupModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <p class="text-xs text-slate-500 leading-relaxed">
-                Kelola data transaksi & riwayat nota dalam format JSON agar dapat digunakan antar perangkat tanpa perlu database server.
+                Kelola data transaksi & riwayat nota dalam format JSON agar fleksibel digunakan antar perangkat tanpa terikat server database.
             </p>
 
-            <div class="space-y-3 pt-2">
-                <button onclick="exportJSONBackup()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-download"></i> Backup Data / Export JSON
+            <div class="space-y-2.5 pt-1">
+                <!-- 1. Offline Download / Export JSON -->
+                <button onclick="exportJSONBackup()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-download"></i> Offline Download / Export JSON
                 </button>
 
+                <!-- 2. Offline Import / Restore JSON -->
                 <div class="relative">
                     <input type="file" id="import-file-input" accept=".json" onchange="importJSONBackup(event)" class="hidden">
-                    <button onclick="document.getElementById('import-file-input').click()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-upload"></i> Restore Data / Import JSON
+                    <button onclick="document.getElementById('import-file-input').click()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-upload"></i> Offline Import / Restore JSON
                     </button>
                 </div>
+
+                <!-- 3. Backup ke Dropbox -->
+                <button onclick="backupToDropbox()" class="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-center">
+                    <i class="fa-brands fa-dropbox text-blue-500 text-base"></i> Backup ke Dropbox
+                </button>
+
+                <!-- 4. Restore dari Dropbox -->
+                <button onclick="restoreFromDropbox()" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-center">
+                    <i class="fa-brands fa-dropbox text-blue-400 text-base"></i> Restore dari Dropbox
+                </button>
+
+                <div id="dropbox-sync-status" class="text-[10px] text-center text-slate-400 min-h-[15px]"></div>
             </div>
         </div>
     </div>
@@ -739,6 +762,283 @@
     </div>
 
     <script>
+        /* DROPBOX INTEGRATION CONFIGURATION STORE */
+        const DROPBOX_CONFIG = {
+            // GANTI INI SAJA dengan App Key Dropbox milik lo.
+            appKey: 'u5mrg5t1wrj1ho9',
+            fileName: 'glamstitch_pos_db.json',
+            // App Folder Dropbox = root dari folder Apps/<nama-app>/
+            filePath: '/glamstitch_pos_db.json'
+        };
+
+        /* DROPBOX CLOUD SYNC ENGINE - PURE HTML/JS, NO BACKEND */
+        const DROPBOX_OAUTH = {
+            accessTokenKey: 'glamstitch_dropbox_access_token',
+            refreshTokenKey: 'glamstitch_dropbox_refresh_token',
+            expiresAtKey: 'glamstitch_dropbox_expires_at',
+            verifierKey: 'glamstitch_dropbox_pkce_verifier'
+        };
+
+        function setDropboxStatus(message, error = false) {
+            const el = document.getElementById('dropbox-sync-status');
+            if (el) {
+                el.textContent = message || '';
+                el.className = 'text-[10px] text-center min-h-[15px] ' + (error ? 'text-rose-500' : 'text-slate-400');
+            }
+        }
+
+        function base64Url(bytes) {
+            let binary = '';
+            bytes.forEach(b => binary += String.fromCharCode(b));
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        function randomString(length = 64) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+            const bytes = crypto.getRandomValues(new Uint8Array(length));
+            return Array.from(bytes, b => chars[b % chars.length]).join('');
+        }
+
+        async function sha256Base64Url(value) {
+            const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+            return base64Url(new Uint8Array(digest));
+        }
+
+        function dropboxRedirectUri() {
+            return window.location.origin + window.location.pathname;
+        }
+
+        async function startDropboxLogin() {
+            if (!DROPBOX_CONFIG.appKey || DROPBOX_CONFIG.appKey === 'GANTI_APP_KEY_DI_SINI') {
+                alert('Isi App Key Dropbox di DROPBOX_CONFIG dulu, bos.');
+                return false;
+            }
+            if (location.protocol === 'file:') {
+                alert('POS harus dibuka dari website HTTPS/HTTP yang sudah di-deploy. Dropbox OAuth tidak bisa memakai file:// sebagai Redirect URI.');
+                return false;
+            }
+
+            const verifier = randomString(64);
+            const challenge = await sha256Base64Url(verifier);
+            localStorage.setItem(DROPBOX_OAUTH.verifierKey, verifier);
+
+            const params = new URLSearchParams({
+                client_id: DROPBOX_CONFIG.appKey,
+                response_type: 'code',
+                redirect_uri: dropboxRedirectUri(),
+                token_access_type: 'offline',
+                code_challenge_method: 'S256',
+                code_challenge: challenge
+            });
+
+            window.location.href = 'https://www.dropbox.com/oauth2/authorize?' + params.toString();
+            return true;
+        }
+
+        async function finishDropboxLoginIfNeeded() {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            const oauthError = params.get('error_description') || params.get('error');
+            if (oauthError) {
+                history.replaceState({}, document.title, window.location.pathname);
+                setDropboxStatus('Login Dropbox dibatalkan.', true);
+                return false;
+            }
+            if (!code) return false;
+
+            const verifier = localStorage.getItem(DROPBOX_OAUTH.verifierKey);
+            if (!verifier) {
+                alert('Sesi login Dropbox tidak lengkap. Coba koneksikan lagi.');
+                return false;
+            }
+
+            setDropboxStatus('Menghubungkan ke Dropbox...');
+            const body = new URLSearchParams({
+                code,
+                grant_type: 'authorization_code',
+                client_id: DROPBOX_CONFIG.appKey,
+                redirect_uri: dropboxRedirectUri(),
+                code_verifier: verifier
+            });
+
+            const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body
+            });
+            const data = await response.json();
+            if (!response.ok || !data.access_token) throw new Error(data.error_description || data.error || 'OAuth Dropbox gagal.');
+
+            localStorage.setItem(DROPBOX_OAUTH.accessTokenKey, data.access_token);
+            if (data.refresh_token) localStorage.setItem(DROPBOX_OAUTH.refreshTokenKey, data.refresh_token);
+            localStorage.setItem(DROPBOX_OAUTH.expiresAtKey, String(Date.now() + ((data.expires_in || 14400) * 1000)));
+            localStorage.removeItem(DROPBOX_OAUTH.verifierKey);
+            history.replaceState({}, document.title, window.location.pathname);
+            setDropboxStatus('Dropbox tersambung.');
+            return true;
+        }
+
+        async function refreshDropboxToken() {
+            const refreshToken = localStorage.getItem(DROPBOX_OAUTH.refreshTokenKey);
+            if (!refreshToken) return false;
+            const body = new URLSearchParams({
+                refresh_token: refreshToken,
+                grant_type: 'refresh_token',
+                client_id: DROPBOX_CONFIG.appKey
+            });
+            const response = await fetch('https://api.dropboxapi.com/oauth2/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body
+            });
+            const data = await response.json();
+            if (!response.ok || !data.access_token) return false;
+            localStorage.setItem(DROPBOX_OAUTH.accessTokenKey, data.access_token);
+            localStorage.setItem(DROPBOX_OAUTH.expiresAtKey, String(Date.now() + ((data.expires_in || 14400) * 1000)));
+            return true;
+        }
+
+        async function getDropboxAccessToken() {
+            const token = localStorage.getItem(DROPBOX_OAUTH.accessTokenKey);
+            const expiresAt = Number(localStorage.getItem(DROPBOX_OAUTH.expiresAtKey) || 0);
+            if (token && Date.now() < expiresAt - 60000) return token;
+            if (await refreshDropboxToken()) return localStorage.getItem(DROPBOX_OAUTH.accessTokenKey);
+            return null;
+        }
+
+        function buildDropboxBackupData() {
+            const history = localStorage.getItem('glamstitch_orders_history') || '[]';
+            const customers = localStorage.getItem('glamstitch_customers') || '[]';
+            return {
+                app: 'Glamstitch POS Engine V5',
+                version: '5.0',
+                brandConfig,
+                customersDatabase: JSON.parse(customers),
+                exportedAt: new Date().toISOString(),
+                ordersHistory: JSON.parse(history)
+            };
+        }
+
+        async function dropboxApi(endpoint, options = {}, retry = true) {
+            const token = await getDropboxAccessToken();
+            if (!token) {
+                await startDropboxLogin();
+                return null;
+            }
+            options.headers = Object.assign({}, options.headers || {}, { Authorization: 'Bearer ' + token });
+            const response = await fetch('https://api.dropboxapi.com/2/' + endpoint, options);
+            if (response.status === 401 && retry) {
+                if (await refreshDropboxToken()) return dropboxApi(endpoint, options, false);
+                localStorage.removeItem(DROPBOX_OAUTH.accessTokenKey);
+                localStorage.removeItem(DROPBOX_OAUTH.refreshTokenKey);
+                await startDropboxLogin();
+                return null;
+            }
+            return response;
+        }
+
+        async function uploadDropboxJSON(data) {
+            const token = await getDropboxAccessToken();
+            if (!token) { await startDropboxLogin(); return false; }
+            const response = await fetch('https://content.dropboxapi.com/2/files/upload', {
+                method: 'POST',
+                headers: {
+                    Authorization: 'Bearer ' + token,
+                    'Content-Type': 'application/octet-stream',
+                    'Dropbox-API-Arg': JSON.stringify({
+                        path: DROPBOX_CONFIG.filePath,
+                        mode: 'overwrite',
+                        autorename: false,
+                        mute: true,
+                        strict_conflict: false
+                    })
+                },
+                body: JSON.stringify(data, null, 2)
+            });
+            if (response.status === 401) {
+                if (await refreshDropboxToken()) return uploadDropboxJSON(data);
+                await startDropboxLogin();
+                return false;
+            }
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(err || 'Upload Dropbox gagal.');
+            }
+            return true;
+        }
+
+        async function downloadDropboxJSON() {
+            const token = await getDropboxAccessToken();
+            if (!token) { await startDropboxLogin(); return null; }
+            const response = await fetch('https://content.dropboxapi.com/2/files/download', {
+                method: 'POST',
+                headers: {
+                    Authorization: 'Bearer ' + token,
+                    'Dropbox-API-Arg': JSON.stringify({ path: DROPBOX_CONFIG.filePath })
+                }
+            });
+            if (response.status === 401) {
+                if (await refreshDropboxToken()) return downloadDropboxJSON();
+                await startDropboxLogin();
+                return null;
+            }
+            if (response.status === 409) throw new Error('File ' + DROPBOX_CONFIG.fileName + ' belum ada di folder Dropbox App.');
+            if (!response.ok) throw new Error(await response.text() || 'Download Dropbox gagal.');
+            return await response.json();
+        }
+
+        function applyDropboxBackupData(parsed) {
+            if (!parsed || (!parsed.ordersHistory && !parsed.brandConfig && !parsed.customersDatabase)) throw new Error('Format JSON Dropbox tidak valid.');
+            if (parsed.brandConfig) {
+                brandConfig = parsed.brandConfig;
+                localStorage.setItem('glamstitch_brand_config', JSON.stringify(brandConfig));
+                applyBrandUI();
+            }
+            if (parsed.ordersHistory) localStorage.setItem('glamstitch_orders_history', JSON.stringify(parsed.ordersHistory));
+            if (parsed.customersDatabase) localStorage.setItem('glamstitch_customers', JSON.stringify(parsed.customersDatabase));
+            renderHistoryList();
+        }
+
+        async function backupToDropbox() {
+            try {
+                setDropboxStatus('Mengunggah backup...');
+                const ok = await uploadDropboxJSON(buildDropboxBackupData());
+                if (ok) {
+                    setDropboxStatus('Backup berhasil: ' + DROPBOX_CONFIG.fileName);
+                    alert('Backup berhasil disimpan ke Dropbox.');
+                }
+            } catch (err) {
+                console.error(err);
+                setDropboxStatus('Backup gagal.', true);
+                alert('Backup Dropbox gagal: ' + err.message);
+            }
+        }
+
+        async function restoreFromDropbox(showAlert = true) {
+            try {
+                setDropboxStatus('Mengambil data dari Dropbox...');
+                const parsed = await downloadDropboxJSON();
+                if (!parsed) return;
+                applyDropboxBackupData(parsed);
+                setDropboxStatus('Restore berhasil dari Dropbox.');
+                if (showAlert) alert('Data berhasil di-restore dari Dropbox.');
+            } catch (err) {
+                console.error(err);
+                setDropboxStatus('Restore gagal.', true);
+                if (showAlert) alert('Restore Dropbox gagal: ' + err.message);
+            }
+        }
+
+        async function autoRestoreDropbox() {
+            try {
+                const justLoggedIn = await finishDropboxLoginIfNeeded();
+                if (justLoggedIn) await restoreFromDropbox(false);
+                else if (localStorage.getItem(DROPBOX_OAUTH.refreshTokenKey)) await restoreFromDropbox(false);
+            } catch (err) {
+                console.warn('Dropbox auto-restore:', err);
+            }
+        }
+
         /* 1. MASTER CATALOG PRODUCTS */
         const PRODUCTS = [
             { id: 1, name: 'Paket Ekonomis Polos Plan', category: 'jersey', desc: 'Sangat terjangkau untuk kebutuhan jersey dasar.', minQty: 1, options: [{ label: 'Atasan', price: 60000 }, { label: 'Setelan', price: 90000 }] },
@@ -782,7 +1082,7 @@
             generateNewOrderId();
             renderCart();
 
-            // Auto-setup DTF listener
+            // Auto-setup DTF & option listeners
             document.getElementById('add-dtf-pkg').addEventListener('change', calculateModalPrice);
             document.getElementById('addon-collar').addEventListener('change', calculateModalPrice);
             document.getElementById('add-longsleeve').addEventListener('change', calculateModalPrice);
@@ -795,6 +1095,8 @@
             document.getElementById('addon-logo').addEventListener('change', calculateModalPrice);
 
             renderHistoryList();
+            // Jika Dropbox sudah pernah tersambung, ambil database terbaru otomatis.
+            setTimeout(autoRestoreDropbox, 300);
         };
 
         /* CLOSE CUSTOMER DROPDOWN ON OUTSIDE CLICK */
@@ -903,7 +1205,6 @@
             document.getElementById('cart-order-id').innerText = `ID: #ORD-${rand}`;
         }
 
-        /* 3. BRAND CONFIGURATION ENGINE */
         function applyBrandUI() {
             document.getElementById('sidebar-brand-name').innerText = brandConfig.name;
             document.getElementById('sidebar-brand-tagline').innerText = brandConfig.tagline;
@@ -989,7 +1290,6 @@
             }
         }
 
-        /* 4. CATALOG & POS RENDER ENGINE */
         function renderCatalog(cat = 'all') {
             const grid = document.getElementById('product-grid');
             grid.innerHTML = '';
@@ -1051,7 +1351,6 @@
             renderCatalog(cat);
         }
 
-        /* 5. ADD-ON MODAL & DTF OVERRIDE LOGIC */
         function openAddonModal(productId) {
             selectedProductForModal = PRODUCTS.find(p => p.id === productId);
             if (!selectedProductForModal) return;
@@ -1221,7 +1520,6 @@
             closeAddonModal();
         }
 
-        /* 6. CART MANAGEMENT & TOTAL CALCULATIONS */
         function renderCart() {
             const container = document.getElementById('cart-items-container');
             container.innerHTML = '';
@@ -1323,7 +1621,6 @@
             }
         }
 
-        /* 7. CHECKOUT & DOCUMENT GENERATION */
         function processCheckout() {
             if (cart.length === 0) {
                 alert('Keranjang belanja masih kosong! Silahkan tambah paket apparel terlebih dahulu.');
@@ -1581,7 +1878,6 @@
             window.print();
         }
 
-        /* 8. EXECUTIVE SALES REPORTING MODULE */
         let currentReportPeriod = 'today';
         let activeReportData = [];
 
@@ -1929,7 +2225,6 @@
             }, 100);
         }
 
-        /* 9. REPRINT MODAL & FLOATING SEARCH FLOW */
         function openReprintModal() {
             document.getElementById('modal-reprint').classList.remove('hidden');
             document.getElementById('reprint-search-input').value = '';
@@ -1978,7 +2273,6 @@
             `).join('');
         }
 
-        /* 10. DATA HISTORY & LOCAL STORAGE MANAGEMENT */
         function saveOrderToHistory(order) {
             let history = JSON.parse(localStorage.getItem('glamstitch_orders_history') || '[]');
             history.unshift(order);
@@ -2101,7 +2395,6 @@
             }
         }
 
-        /* 11. BACKUP & RESTORE MODAL */
         function openBackupModal() {
             document.getElementById('modal-backup').classList.remove('hidden');
         }
@@ -2116,6 +2409,7 @@
             const backupData = {
                 app: 'Glamstitch POS Engine V5',
                 version: '5.0',
+                dropboxConfig: DROPBOX_CONFIG,
                 brandConfig: brandConfig,
                 customersDatabase: JSON.parse(customers),
                 exportedAt: new Date().toISOString(),
@@ -2126,7 +2420,6 @@
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
             downloadAnchor.setAttribute("download", `apparel_pos_backup_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
         }
@@ -2164,7 +2457,6 @@
             reader.readAsText(file);
         }
 
-        /* 12. NAVIGATION TABS SWITCHER */
         function switchTab(tab) {
             const posContent = document.getElementById('tab-pos-content');
             const historyContent = document.getElementById('tab-history-content');
@@ -2208,4 +2500,4 @@
         }
     </script>
 </body>
-</html>
+</htmlapp
